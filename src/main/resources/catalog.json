@@ -1,0 +1,44 @@
+{
+  "services":[
+    {
+      "id":"aUniqueId",
+      "name":"hello",
+      "description":"Friendly service that greets you",
+      "requires":[
+
+      ],
+      "tags":[
+        "hello"
+      ],
+      "metadata":{
+        "displayName":"Hello",
+        "imageUrl":"https://d33na3ni6eqf5j.cloudfront.net/app_resources/18492/thumbs_112/img9069612145282015279.png",
+        "longDescription":"Hello from the cloud",
+        "providerDisplayName":"Pivotal",
+        "documentationUrl":"https://docs.cloudfoundry.org/services/api.html"
+      },
+      "plans":[
+        {
+          "id":"anotherUniquId",
+          "name":"hi",
+          "description":"An informal hello",
+          "metadata":{
+            "bullets":[
+              "simple",
+              "to the point"
+            ],
+            "costs":[
+              {
+                "amount":{
+                  "usd":0.0
+                },
+                "unit":"MONTHLY"
+              }
+            ],
+            "displayName":"Hi"
+          }
+        }
+      ]
+    }
+  ]
+}
