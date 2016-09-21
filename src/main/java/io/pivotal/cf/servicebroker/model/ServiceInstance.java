@@ -1,4 +1,4 @@
-package io.pivotal.cf.servicebroker.persistance;
+package io.pivotal.cf.servicebroker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

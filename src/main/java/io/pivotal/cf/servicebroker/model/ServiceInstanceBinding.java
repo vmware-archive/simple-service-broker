@@ -1,4 +1,4 @@
-package io.pivotal.cf.servicebroker.persistance;
+package io.pivotal.cf.servicebroker.model;
 
 import java.io.Serializable;
 import java.util.HashMap;

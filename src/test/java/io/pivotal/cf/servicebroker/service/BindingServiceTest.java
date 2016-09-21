@@ -2,8 +2,8 @@ package io.pivotal.cf.servicebroker.service;
 
 import io.pivotal.cf.servicebroker.Application;
 import io.pivotal.cf.servicebroker.TestConfig;
-import io.pivotal.cf.servicebroker.persistance.ServiceInstance;
-import io.pivotal.cf.servicebroker.persistance.ServiceInstanceBinding;
+import io.pivotal.cf.servicebroker.model.ServiceInstance;
+import io.pivotal.cf.servicebroker.model.ServiceInstanceBinding;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,14 +31,14 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {Application.class})
-public class ServiceInstanceBindingServiceTest {
+public class BindingServiceTest {
 
     @Autowired
     @InjectMocks
-    ServiceInstanceBindingService serviceInstanceBindingService;
+    BindingService serviceInstanceBindingService;
 
     @Mock
-    ServiceInstanceService serviceInstanceService;
+    InstanceService instanceService;
 
     @Resource(name = "sibTemplate")
     private HashOperations<String, String, ServiceInstanceBinding> repo;
@@ -53,30 +53,30 @@ public class ServiceInstanceBindingServiceTest {
 
         ServiceInstance si = TestConfig.getServiceInstance();
 
-        when(serviceInstanceService.getServiceInstance(Matchers.anyString()))
+        when(instanceService.getServiceInstance(Matchers.anyString()))
                 .thenReturn(si);
 
         when(
-                serviceInstanceService
+                instanceService
                         .saveInstance(any(ServiceInstance.class)))
                 .thenReturn(si);
 
         when(
-                serviceInstanceService
+                instanceService
                         .deleteInstance(any(ServiceInstance.class)))
                 .thenReturn(si);
 
-        Set<String> keys = repo.keys(ServiceInstanceBindingService.OBJECT_ID);
+        Set<String> keys = repo.keys(BindingService.OBJECT_ID);
         for (String key : keys) {
-            repo.delete(ServiceInstanceBindingService.OBJECT_ID, key);
+            repo.delete(BindingService.OBJECT_ID, key);
         }
     }
 
     @After
     public void cleanUp() throws Exception {
-        Set<String> keys = repo.keys(ServiceInstanceBindingService.OBJECT_ID);
+        Set<String> keys = repo.keys(BindingService.OBJECT_ID);
         for (String key : keys) {
-            repo.delete(ServiceInstanceBindingService.OBJECT_ID, key);
+            repo.delete(BindingService.OBJECT_ID, key);
         }
     }
 

@@ -1,7 +1,7 @@
 package io.pivotal.cf.servicebroker;
 
-import io.pivotal.cf.servicebroker.persistance.ServiceInstance;
-import io.pivotal.cf.servicebroker.persistance.ServiceInstanceBinding;
+import io.pivotal.cf.servicebroker.model.ServiceInstance;
+import io.pivotal.cf.servicebroker.model.ServiceInstanceBinding;
 import io.pivotal.cf.servicebroker.service.CatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,7 +12,6 @@ import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindin
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -105,7 +104,7 @@ public class TestConfig {
     }
 
     public static CreateServiceInstanceBindingRequest getCreateBindingRequest() {
-        io.pivotal.cf.servicebroker.persistance.ServiceInstance si = getServiceInstance();
+        io.pivotal.cf.servicebroker.model.ServiceInstance si = getServiceInstance();
         CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(
                 si.getServiceDefinitionId(), si.getPlanId(), "anAppId",
                 si.getParameters());

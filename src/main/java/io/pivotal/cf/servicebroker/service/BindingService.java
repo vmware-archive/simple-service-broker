@@ -1,7 +1,7 @@
 package io.pivotal.cf.servicebroker.service;
 
-import io.pivotal.cf.servicebroker.persistance.ServiceInstance;
-import io.pivotal.cf.servicebroker.persistance.ServiceInstanceBinding;
+import io.pivotal.cf.servicebroker.model.ServiceInstance;
+import io.pivotal.cf.servicebroker.model.ServiceInstanceBinding;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
@@ -18,16 +18,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class ServiceInstanceBindingService implements
+public class BindingService implements
         org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService {
 
     private static final Logger LOG = Logger
-            .getLogger(ServiceInstanceBindingService.class);
+            .getLogger(BindingService.class);
 
     public static final String OBJECT_ID = "ServiceInstanceBinding";
 
     @Autowired
-    private ServiceInstanceService serviceInstanceService;
+    private InstanceService instanceService;
 
     @Resource(name = "sibTemplate")
     private HashOperations<String, String, ServiceInstanceBinding> repository;
@@ -46,7 +46,7 @@ public class ServiceInstanceBindingService implements
         }
 
         String serviceInstanceId = request.getServiceInstanceId();
-        ServiceInstance si = serviceInstanceService
+        ServiceInstance si = instanceService
                 .getServiceInstance(serviceInstanceId);
 
         if (si == null) {

@@ -1,8 +1,8 @@
-package io.pivotal.cf.servicebroker.persistance;
+package io.pivotal.cf.servicebroker.model;
 
 import io.pivotal.cf.servicebroker.Application;
 import io.pivotal.cf.servicebroker.TestConfig;
-import io.pivotal.cf.servicebroker.service.ServiceInstanceService;
+import io.pivotal.cf.servicebroker.service.InstanceService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,50 +26,50 @@ public class ServiceInstanceRepositoryTest {
 
     @Before
     public void setup() {
-        Set<String> keys = repository.keys(ServiceInstanceService.OBJECT_ID);
+        Set<String> keys = repository.keys(InstanceService.OBJECT_ID);
         for (String key : keys) {
-            repository.delete(ServiceInstanceService.OBJECT_ID, key);
+            repository.delete(InstanceService.OBJECT_ID, key);
         }
     }
 
     @After
     public void teardown() {
-        Set<String> keys = repository.keys(ServiceInstanceService.OBJECT_ID);
+        Set<String> keys = repository.keys(InstanceService.OBJECT_ID);
         for (String key : keys) {
-            repository.delete(ServiceInstanceService.OBJECT_ID, key);
+            repository.delete(InstanceService.OBJECT_ID, key);
         }
     }
 
     @Test
     public void instanceInsertedSuccessfully() throws Exception {
         ServiceInstance si = TestConfig.getServiceInstance();
-        assertEquals(0, repository.entries(ServiceInstanceService.OBJECT_ID).size());
+        assertEquals(0, repository.entries(InstanceService.OBJECT_ID).size());
 
-        repository.put(ServiceInstanceService.OBJECT_ID, si.getId(), si);
-        assertEquals(1, repository.entries(ServiceInstanceService.OBJECT_ID).size());
+        repository.put(InstanceService.OBJECT_ID, si.getId(), si);
+        assertEquals(1, repository.entries(InstanceService.OBJECT_ID).size());
     }
 
     @Test
     public void instanceDeletedSuccessfully() throws Exception {
         ServiceInstance si = TestConfig.getServiceInstance();
-        assertEquals(0, repository.entries(ServiceInstanceService.OBJECT_ID).size());
+        assertEquals(0, repository.entries(InstanceService.OBJECT_ID).size());
 
-        repository.put(ServiceInstanceService.OBJECT_ID, si.getId(), si);
-        assertEquals(1, repository.entries(ServiceInstanceService.OBJECT_ID).size());
+        repository.put(InstanceService.OBJECT_ID, si.getId(), si);
+        assertEquals(1, repository.entries(InstanceService.OBJECT_ID).size());
 
-        ServiceInstance si2 = repository.get(ServiceInstanceService.OBJECT_ID, si.getId());
+        ServiceInstance si2 = repository.get(InstanceService.OBJECT_ID, si.getId());
         assertNotNull(si2);
         assertEquals("anID", si2.getId());
 
-        ServiceInstance si3 = repository.get(ServiceInstanceService.OBJECT_ID, "anID");
+        ServiceInstance si3 = repository.get(InstanceService.OBJECT_ID, "anID");
         assertNotNull(si3);
         assertEquals("anID", si3.getId());
         assertEquals(TestConfig.SD_ID, si3.getServiceDefinitionId());
 
         //System.out.println(gson.toJson(si3));
 
-        repository.delete(ServiceInstanceService.OBJECT_ID, si3.getId());
+        repository.delete(InstanceService.OBJECT_ID, si3.getId());
 
-        assertEquals(0, repository.entries(ServiceInstanceService.OBJECT_ID).size());
+        assertEquals(0, repository.entries(InstanceService.OBJECT_ID).size());
     }
 }
