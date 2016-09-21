@@ -1,21 +1,16 @@
 package io.pivotal.cf.servicebroker;
 
+import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import io.pivotal.cf.servicebroker.model.ServiceInstanceBinding;
 import io.pivotal.cf.servicebroker.service.CatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
-import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -29,15 +24,7 @@ public class TestConfig {
     public static final String SD_ID = "aUniqueId";
 
     @Autowired
-    private Environment env;
-
-    @Autowired
     private CatalogService catalogService;
-
-    @Bean
-    String serviceUri() {
-        return env.getProperty("vRserviceUri");
-    }
 
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
@@ -48,29 +35,12 @@ public class TestConfig {
         return factory;
     }
 
-
-    @Bean
-    @Qualifier("siTemplate")
-    RedisTemplate<String, ServiceInstance> siTemplate() {
-        RedisTemplate<String, ServiceInstance> template = new RedisTemplate<String, ServiceInstance>();
-        template.setConnectionFactory(jedisConnectionFactory());
-        return template;
-    }
-
-    @Bean
-    @Qualifier("sibTemplate")
-    RedisTemplate<String, ServiceInstanceBinding> sibTemplate() {
-        RedisTemplate<String, ServiceInstanceBinding> template = new RedisTemplate<String, ServiceInstanceBinding>();
-        template.setConnectionFactory(jedisConnectionFactory());
-        return template;
-    }
-
     public static String getContents(String fileName) throws Exception {
         URI u = new ClassPathResource(fileName).getURI();
         return new String(Files.readAllBytes(Paths.get(u)));
     }
 
-    public static CreateServiceInstanceRequest getCreateServiceInstanceRequest() {
+    private static CreateServiceInstanceRequest getCreateServiceInstanceRequest() {
         Map<String, Object> parms = new HashMap<>();
 
         CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(
@@ -91,41 +61,17 @@ public class TestConfig {
         return req;
     }
 
-//	public static DeleteServiceInstanceRequest getDeleteServiceInstanceRequest() {
-//		CreateServiceInstanceRequest creq = getCreateServiceInstanceRequest();
-//		DeleteServiceInstanceRequest dreq = new DeleteServiceInstanceRequest(
-//				creq.getServiceInstanceId(), creq.getServiceDefinitionId(),
-//				creq.getPlanId(), true);
-//		return dreq;
-//	}
-
     public static ServiceInstance getServiceInstance() {
         return new ServiceInstance(getCreateServiceInstanceRequest());
     }
 
-    public static CreateServiceInstanceBindingRequest getCreateBindingRequest() {
-        io.pivotal.cf.servicebroker.model.ServiceInstance si = getServiceInstance();
-        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(
-                si.getServiceDefinitionId(), si.getPlanId(), "anAppId",
-                si.getParameters());
-        req.withBindingId("98765");
-        req.withServiceInstanceId(si.getId());
+    private static CreateServiceInstanceBindingRequest getCreateBindingRequest() {
+        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest("aSdId", "aPlanId", "anAppGuid", null, null);
+        req.withBindingId("12345");
         return req;
     }
 
-    public static ServiceInstanceBinding getServiceInstanceBinding()
-            throws ServiceBrokerException {
-        CreateServiceInstanceBindingRequest req = getCreateBindingRequest();
-        return new ServiceInstanceBinding(req.getBindingId(),
-                req.getServiceInstanceId(), null, null, null);
-    }
-
-    public DeleteServiceInstanceBindingRequest getDeleteBindingRequest() {
-        ServiceInstance si = getServiceInstance();
-        CreateServiceInstanceBindingRequest creq = getCreateBindingRequest();
-        return new DeleteServiceInstanceBindingRequest(
-                si.getId(),
-                creq.getBindingId(), si.getServiceDefinitionId(),
-                si.getPlanId(), catalogService.getServiceDefinition(si.getServiceDefinitionId()));
+    public static ServiceBinding getServiceInstanceBinding() {
+        return new ServiceBinding(getCreateBindingRequest());
     }
 }

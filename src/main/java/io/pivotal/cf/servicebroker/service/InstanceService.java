@@ -1,19 +1,21 @@
 package io.pivotal.cf.servicebroker.service;
 
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceDefinitionDoesNotExistException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Service;
 
-@Service
-public class InstanceService implements org.springframework.cloud.servicebroker.service.ServiceInstanceService {
+import javax.annotation.Resource;
 
-    private static final Logger LOG = Logger
-            .getLogger(InstanceService.class);
+@Service
+@Slf4j
+public class InstanceService implements org.springframework.cloud.servicebroker.service.ServiceInstanceService {
 
     public static final String OBJECT_ID = "Instance";
 
@@ -23,11 +25,12 @@ public class InstanceService implements org.springframework.cloud.servicebroker.
     @Autowired
     private BrokeredService brokeredService;
 
-    private HashOperations<String, String, ServiceInstance> instanceTemplate;
+    @Resource(name = "instanceTemplate")
+    private HashOperations<String, String, ServiceInstance> repository;
 
     ServiceInstance getServiceInstance(String id) {
         if (id == null || getInstance(id) == null) {
-            LOG.warn("service instance with id: " + id + " not found!");
+            log.warn("service instance with id: " + id + " not found!");
             return null;
         }
 
@@ -35,29 +38,29 @@ public class InstanceService implements org.springframework.cloud.servicebroker.
     }
 
     @Override
-    public CreateServiceInstanceResponse createServiceInstance(CreateServiceInstanceRequest request)
-            throws ServiceInstanceExistsException {
+    public CreateServiceInstanceResponse createServiceInstance(CreateServiceInstanceRequest request) {
 
-        //TODO generalize, use right exceptions
-        if (getInstance(request.getServiceInstanceId()) != null) {
-            throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceDefinitionId());
+        try {
+            if (getInstance(request.getServiceInstanceId()) != null) {
+                throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceInstanceId());
+            }
+        } catch (ServiceInstanceDoesNotExistException e) {
+            //ok, don't have this instance, keep going
         }
 
         ServiceDefinition sd = catalogService.getServiceDefinition(request.getServiceDefinitionId());
 
         if (sd == null) {
-            throw new ServiceBrokerException("Unable to find service definition with id: " + request.getServiceDefinitionId());
+            throw new ServiceDefinitionDoesNotExistException(request.getServiceDefinitionId());
         }
 
-        LOG.info("creating service instance: " + request.getServiceInstanceId() + " service definition: " + request.getServiceDefinitionId());
-
+        log.info("creating service instance: " + request.getServiceInstanceId() + " service definition: " + request.getServiceDefinitionId());
         ServiceInstance instance = new ServiceInstance(request);
-        brokeredService.create(instance);
+        brokeredService.createInstance(instance);
         saveInstance(instance);
 
-        LOG.info("registered service instance: " + instance.getId());
-
-        return new CreateServiceInstanceResponse().withAsync(brokeredService.isAsynch());
+        log.info("registered service instance: " + request.getServiceInstanceId());
+        return instance.getCreateResponse();
     }
 
     @Override
@@ -69,53 +72,50 @@ public class InstanceService implements org.springframework.cloud.servicebroker.
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
 
-        LOG.info("starting service instance delete: " + request.getServiceInstanceId());
-
+        log.info("starting service instance delete: " + request.getServiceInstanceId());
         ServiceInstance instance = getInstance(request.getServiceInstanceId());
-        if (instance == null) {
-            throw new ServiceBrokerException("Service instance: " + request.getServiceInstanceId() + " not found.");
-        }
-
-        LOG.info("requesting delete: " + request.getServiceInstanceId());
-        brokeredService.delete(instance);
-
+        brokeredService.deleteInstance(instance);
         deleteInstance(instance);
-        return new DeleteServiceInstanceResponse().withAsync(brokeredService.isAsynch());
+
+        log.info("deleted service instance: " + request.getServiceInstanceId());
+        return instance.getDeleteResponse();
     }
 
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
         //TODO deal with updates
-        LOG.info("starting service instance update: " + request.getServiceInstanceId());
-
+        log.info("starting service instance update: " + request.getServiceInstanceId());
         ServiceInstance instance = getInstance(request.getServiceInstanceId());
-        if (instance == null) {
-            throw new ServiceBrokerException("Service instance: " + request.getServiceInstanceId() + " not found.");
-        }
-
-        LOG.info("requesting update: " + request.getServiceInstanceId());
-        brokeredService.update(instance);
-
+        brokeredService.updateInstance(instance);
         saveInstance(instance);
-        return new UpdateServiceInstanceResponse().withAsync(brokeredService.isAsynch());
+
+        log.info("updated service instance: " + request.getServiceInstanceId());
+        return instance.getUpdateResponse();
     }
 
-    private ServiceInstance getInstance(String id) {
+    private ServiceInstance getInstance(String id) throws ServiceBrokerException {
         if (id == null) {
-            return null;
+            throw new ServiceBrokerException("null serviceInstanceId");
         }
-        return instanceTemplate.get(OBJECT_ID, id);
+
+        ServiceInstance si = repository.get(OBJECT_ID, id);
+
+        if (si == null) {
+            throw new ServiceInstanceDoesNotExistException(id);
+        }
+
+        return si;
     }
 
     ServiceInstance deleteInstance(ServiceInstance instance) {
-        LOG.info("deleting service instance from repo: " + instance.getId());
-        instanceTemplate.delete(OBJECT_ID, instance.getId());
+        log.info("deleting service instance from repo: " + instance.getId());
+        repository.delete(OBJECT_ID, instance.getId());
         return instance;
     }
 
     ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
-        LOG.info("saving service instance to repo: " + instance.getId());
-        instanceTemplate.put(OBJECT_ID, instance.getId(), instance);
+        log.info("saving service instance to repo: " + instance.getId());
+        repository.put(OBJECT_ID, instance.getId(), instance);
         return instance;
     }
 }

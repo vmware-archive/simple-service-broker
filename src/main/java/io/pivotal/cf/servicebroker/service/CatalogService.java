@@ -1,7 +1,7 @@
 package io.pivotal.cf.servicebroker.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.Catalog;
 import org.springframework.cloud.servicebroker.model.ServiceDefinition;
@@ -14,10 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @Service
-public class CatalogService implements
-        org.springframework.cloud.servicebroker.service.CatalogService {
-
-    private static final Logger LOG = Logger.getLogger(CatalogService.class);
+@Slf4j
+public class CatalogService implements org.springframework.cloud.servicebroker.service.CatalogService {
 
     private Catalog catalog;
 
@@ -30,7 +28,7 @@ public class CatalogService implements
         try {
             return loadCatalog();
         } catch (Exception e) {
-            LOG.error("Error retrieving catalog.", e);
+            log.error("Error retrieving catalog.", e);
             throw new ServiceBrokerException("Unable to retrieve catalog.", e);
         }
     }

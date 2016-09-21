@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 @SpringApplicationConfiguration(classes = {Application.class})
 public class ServiceInstanceRepositoryTest {
 
-    @Resource(name = "siTemplate")
+    @Resource(name = "instanceTemplate")
     private HashOperations<String, String, ServiceInstance> repository;
 
     @Before
@@ -64,9 +64,6 @@ public class ServiceInstanceRepositoryTest {
         ServiceInstance si3 = repository.get(InstanceService.OBJECT_ID, "anID");
         assertNotNull(si3);
         assertEquals("anID", si3.getId());
-        assertEquals(TestConfig.SD_ID, si3.getServiceDefinitionId());
-
-        //System.out.println(gson.toJson(si3));
 
         repository.delete(InstanceService.OBJECT_ID, si3.getId());
 

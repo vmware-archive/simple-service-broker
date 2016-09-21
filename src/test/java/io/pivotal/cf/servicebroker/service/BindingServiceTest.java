@@ -3,7 +3,7 @@ package io.pivotal.cf.servicebroker.service;
 import io.pivotal.cf.servicebroker.Application;
 import io.pivotal.cf.servicebroker.TestConfig;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import io.pivotal.cf.servicebroker.model.ServiceInstanceBinding;
+import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +17,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
 import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
@@ -40,12 +39,8 @@ public class BindingServiceTest {
     @Mock
     InstanceService instanceService;
 
-    @Resource(name = "sibTemplate")
-    private HashOperations<String, String, ServiceInstanceBinding> repo;
-
-    @Autowired
-    @Resource(name = "sibTemplate")
-    private RedisTemplate<String, ServiceInstanceBinding> template;
+    @Resource(name = "bindingTemplate")
+    private HashOperations<String, String, ServiceBinding> repo;
 
     @Before
     public void setUp() throws Exception {
@@ -53,18 +48,10 @@ public class BindingServiceTest {
 
         ServiceInstance si = TestConfig.getServiceInstance();
 
-        when(instanceService.getServiceInstance(Matchers.anyString()))
-                .thenReturn(si);
+        when(instanceService.getServiceInstance(Matchers.anyString())).thenReturn(si);
+        when(instanceService.saveInstance(any(ServiceInstance.class))).thenReturn(si);
 
-        when(
-                instanceService
-                        .saveInstance(any(ServiceInstance.class)))
-                .thenReturn(si);
-
-        when(
-                instanceService
-                        .deleteInstance(any(ServiceInstance.class)))
-                .thenReturn(si);
+        when(instanceService.deleteInstance(any(ServiceInstance.class))).thenReturn(si);
 
         Set<String> keys = repo.keys(BindingService.OBJECT_ID);
         for (String key : keys) {
@@ -84,11 +71,11 @@ public class BindingServiceTest {
     public void testBinding() throws ServiceBrokerException,
             ServiceInstanceBindingExistsException {
 
-        ServiceInstanceBinding b = TestConfig.getServiceInstanceBinding();
+        ServiceBinding b = TestConfig.getServiceInstanceBinding();
         assertNotNull(b);
-        Map<String, Object> m = b.getCredentials();
-        assertNotNull(m);
         assertNotNull(b.getId());
-        assertEquals("anID", b.getServiceInstanceId());
+        assertEquals("12345", b.getId());
     }
+
+    //TODO fix these tests, plus add is tests too
 }
