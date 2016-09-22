@@ -3,6 +3,7 @@ A simple spring boot cf service broker.
 ##Using the sample
 
 1. Git checkout:
+  
   ```bash
   git clone git@github.com:cf-platform-eng/simple-service-broker.git
   cd simple-service-broker
@@ -10,24 +11,29 @@ A simple spring boot cf service broker.
   ```
 1. Log into cf and target an org/space where you have space developer privileges.
 1. Create the redis datastore for the broker:
+  
   ```bash
   cf create-service rediscloud 100mb hello-ds
   ```
 4. Edit the broker password in application.properties (you probably don't want to check this in!)
 1. Edit the manifest.yml file to give your broker an appropriate name.
 1. Build the app:
+  
   ```bash
   mvn clean install
   ```
 7. Push the app to cf:
+  
   ```bash
   cf push
   ```
 8. Register the broker:
+  
   ```bash
   cf create-service-broker <your broker name> user <the password from application.properties> https://<uri of your broker app> [--space-scoped]
   ```
 9. See your new service:
+  
   ```bash
   cf marketplace
   Getting services from marketplace in org your-org / space your-space as you...
@@ -38,10 +44,12 @@ A simple spring boot cf service broker.
   ...
   ```
 10. Create an instance:
+  
   ```bash
   cf create-service hello hi hello-service
   ```
 11. Look at the broker logs:
+  
   ```bash
   cf logs hello-broker --recent
   ...
@@ -49,6 +57,7 @@ A simple spring boot cf service broker.
   ...
   ```
 12. Bind an app to the service and check the logs again:
+  
   ```bash
   cf bind-service someOtherApp hello-service
   ...
@@ -57,6 +66,7 @@ A simple spring boot cf service broker.
   ...
   ```
 13. Restage the service you bound to and look at its env: you should see some hello credentials in there:
+  
   ```bash
   cf restage someOtherApp
   cf env someOtherApp
@@ -88,6 +98,7 @@ A simple spring boot cf service broker.
    }
   ```
 14. Unbind your app from the service and look at the logs:
+  
   ```bash
   cf unbind-service someOtherApp hello-service
   ...
@@ -95,6 +106,7 @@ A simple spring boot cf service broker.
   ...
   ```
 15. Delete the service and look at the logs:
+  
   ```bash
   cf delete-service hello-service
   ...
@@ -102,11 +114,14 @@ A simple spring boot cf service broker.
   ...
   ```
 16. Unregister and delete the broker:
+  
   ```bash
   cf delete-service-broker hello-broker
   cf delete hello-broker
   ```
+
 ##Creating your own broker
+
 1. Fork this repo (so you can save your changes into your own repository).
 1. Edit the application.properties and manifest.yml files as described above.
 1. Edit the sample catalog.yml file so that it describes your service and plans. Information on what goes into a catalog file can be found [here.](https://docs.cloudfoundry.org/services/api.html)
