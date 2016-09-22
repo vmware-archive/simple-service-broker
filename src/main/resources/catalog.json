@@ -19,21 +19,13 @@
       },
       "plans":[
         {
-          "id":"anotherUniquId",
+          "id":"anotherUniqueId",
           "name":"hi",
           "description":"An informal hello",
           "metadata":{
             "bullets":[
               "simple",
               "to the point"
-            ],
-            "costs":[
-              {
-                "amount":{
-                  "usd":0.0
-                },
-                "unit":"MONTHLY"
-              }
             ],
             "displayName":"Hi"
           }

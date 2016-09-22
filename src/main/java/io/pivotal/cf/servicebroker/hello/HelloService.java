@@ -1,7 +1,8 @@
-package io.pivotal.cf.servicebroker.service;
+package io.pivotal.cf.servicebroker.hello;
 
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
+import io.pivotal.cf.servicebroker.service.DefaultServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.stereotype.Service;
