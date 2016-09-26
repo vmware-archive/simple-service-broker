@@ -45,35 +45,56 @@ public class ServiceInstance implements Serializable {
         super();
         this.id = request.getServiceInstanceId();
         this.organizationGuid = request.getOrganizationGuid();
-        this.planId = request.getPlanId();
-        this.serviceId = request.getServiceDefinitionId();
+        setPlanId(request.getPlanId());
+        setServiceId(request.getServiceDefinitionId());
         this.spaceGuid = request.getSpaceGuid();
+        setParameters(request.getParameters());
+    }
 
-        if (request.getParameters() != null) {
-            parameters.putAll(request.getParameters());
+    public ServiceInstance(UpdateServiceInstanceRequest request) {
+        super();
+        this.id = request.getServiceInstanceId();
+        setPlanId(request.getPlanId());
+        setServiceId(request.getServiceDefinitionId());
+        setParameters(request.getParameters());
+    }
+
+    public void setParameters(Map<String, Object> m) {
+        if (m != null) {
+            getParameters().clear();
+            getParameters().putAll(m);
         }
+    }
+
+    public Map<String, Object> getParameters() {
+        return this.parameters;
     }
 
     public String getId() {
         return id;
     }
 
-    public ServiceInstance(DeleteServiceInstanceRequest request) {
-        this.id = request.getServiceInstanceId();
-        this.planId = request.getPlanId();
-        this.serviceId = request.getServiceDefinitionId();
+    public String getServiceId() {
+        return this.serviceId;
     }
 
-    public ServiceInstance(UpdateServiceInstanceRequest request) {
-        this.id = request.getServiceInstanceId();
-        this.planId = request.getPlanId();
+    public void setServiceId(String s) {
+        this.serviceId = s;
+    }
+
+    public String getPlanId() {
+        return this.planId;
+    }
+
+    public void setPlanId(String s) {
+        this.planId = s;
     }
 
     public CreateServiceInstanceResponse getCreateResponse() {
         CreateServiceInstanceResponse resp = new CreateServiceInstanceResponse();
         resp.withAsync(this.acceptsIncomplete);
-        if(parameters.containsKey("dashboard_url")) {
-            resp.withDashboardUrl(parameters.get("dashboard_url").toString());
+        if (getParameters().containsKey("dashboard_url")) {
+            resp.withDashboardUrl(getParameters().get("dashboard_url").toString());
         }
         return resp;
     }

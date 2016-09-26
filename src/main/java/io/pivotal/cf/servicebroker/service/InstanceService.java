@@ -15,9 +15,9 @@ import javax.annotation.Resource;
 
 @Service
 @Slf4j
-public class InstanceService implements org.springframework.cloud.servicebroker.service.ServiceInstanceService {
+class InstanceService implements org.springframework.cloud.servicebroker.service.ServiceInstanceService {
 
-    public static final String OBJECT_ID = "Instance";
+    private static final String OBJECT_ID = "Instance";
 
     @Autowired
     private CatalogService catalogService;
@@ -83,14 +83,19 @@ public class InstanceService implements org.springframework.cloud.servicebroker.
 
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
-        //TODO deal with updates
         log.info("starting service instance update: " + request.getServiceInstanceId());
-        ServiceInstance instance = getInstance(request.getServiceInstanceId());
-        brokeredService.updateInstance(instance);
-        saveInstance(instance);
+        ServiceInstance originalInstance = getInstance(request.getServiceInstanceId());
+        ServiceInstance updatedInstance = new ServiceInstance(request);
+
+        originalInstance.setServiceId(updatedInstance.getServiceId());
+        originalInstance.setPlanId(updatedInstance.getPlanId());
+        originalInstance.setParameters(updatedInstance.getParameters());
+
+        brokeredService.updateInstance(originalInstance);
+        saveInstance(originalInstance);
 
         log.info("updated service instance: " + request.getServiceInstanceId());
-        return instance.getUpdateResponse();
+        return originalInstance.getUpdateResponse();
     }
 
     private ServiceInstance getInstance(String id) throws ServiceBrokerException {
@@ -107,13 +112,13 @@ public class InstanceService implements org.springframework.cloud.servicebroker.
         return si;
     }
 
-    ServiceInstance deleteInstance(ServiceInstance instance) {
+    private ServiceInstance deleteInstance(ServiceInstance instance) {
         log.info("deleting service instance from repo: " + instance.getId());
         repository.delete(OBJECT_ID, instance.getId());
         return instance;
     }
 
-    ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
+    private ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
         log.info("saving service instance to repo: " + instance.getId());
         repository.put(OBJECT_ID, instance.getId(), instance);
         return instance;
