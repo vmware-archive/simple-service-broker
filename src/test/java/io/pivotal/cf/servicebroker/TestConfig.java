@@ -3,11 +3,13 @@ package io.pivotal.cf.servicebroker;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.service.CatalogService;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,13 +28,26 @@ public class TestConfig {
     @Autowired
     private CatalogService catalogService;
 
+    @Mock
+    HashOperations<String, String, ServiceBinding> bindingRepo;
+
+    @Mock
+    HashOperations<String, String, ServiceInstance> serviceRepo;
+
+    @Mock
+    RedisTemplate<String, ServiceInstance> instanceTemplate;
+
+    @Mock
+    RedisTemplate<String, ServiceBinding> bindingTemplate;
+
     @Bean
-    JedisConnectionFactory jedisConnectionFactory() {
-        JedisConnectionFactory factory = new JedisConnectionFactory();
-        factory.setHostName("localhost");
-        factory.setPort(6379);
-        factory.setUsePool(true);
-        return factory;
+    public RedisTemplate bindingTemplate() {
+        return bindingTemplate;
+    }
+
+    @Bean
+    public RedisTemplate instanceTemplate() {
+        return instanceTemplate;
     }
 
     @Bean

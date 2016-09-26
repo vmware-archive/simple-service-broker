@@ -61,7 +61,7 @@ public class BindingService implements ServiceInstanceBindingService {
     public void deleteServiceInstanceBinding(
             DeleteServiceInstanceBindingRequest request) {
 
-        ServiceBinding binding = repository.get(OBJECT_ID, request.getBindingId());
+        ServiceBinding binding = getBinding(request.getBindingId());
 
         if (binding == null) {
             throw new ServiceBrokerException("binding with id: " + request.getBindingId() + " does not exist.");
