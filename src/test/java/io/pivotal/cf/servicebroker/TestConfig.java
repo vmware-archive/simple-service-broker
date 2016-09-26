@@ -4,24 +4,24 @@ import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.service.CatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
-import org.springframework.cloud.servicebroker.model.ServiceDefinition;
+import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 public class TestConfig {
 
+    public static final String SI_ID = "siId";
+    public static final String SB_ID = "sbId";
     public static final String SD_ID = "aUniqueId";
+    public static final String PLAN_ID = "anotherUniqueId";
+    public static final String APP_GUID = "anAppGuid";
+    public static final String ORG_GUID = "anOrgGuid";
+    public static final String SPACE_GUID = "aSpaceGuid";
 
     @Autowired
     private CatalogService catalogService;
@@ -35,43 +35,65 @@ public class TestConfig {
         return factory;
     }
 
-    public static String getContents(String fileName) throws Exception {
-        URI u = new ClassPathResource(fileName).getURI();
-        return new String(Files.readAllBytes(Paths.get(u)));
-    }
-
-    private static CreateServiceInstanceRequest getCreateServiceInstanceRequest() {
-        Map<String, Object> parms = new HashMap<>();
-
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(
-                SD_ID, "pId", "orgId", "spaceId", parms);
-        req.withServiceInstanceId("anID");
+    @Bean
+    public CreateServiceInstanceRequest createServiceInstanceRequest() {
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
+        req.withServiceInstanceId(SI_ID);
         return req;
     }
 
-    public static CreateServiceInstanceRequest getCreateServiceInstanceRequest(
-            ServiceDefinition sd, boolean includeParms) {
+    @Bean
+    @Autowired
+    public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
+        return new ServiceInstance(req);
+    }
 
-        Map<String, Object> parms = new HashMap<>();
+    private Map<String, Object> getBindResources() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("app_guid", APP_GUID);
+        return m;
+    }
 
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(
-                sd.getId(), sd.getPlans().get(0).getId(), "testOrgId",
-                "testSpaceId", parms);
-        req.withServiceInstanceId("anID");
+    private Map<String, Object> getParameters() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("foo", "bar");
+        m.put("bizz", "bazz");
+        return m;
+    }
+
+    @Bean
+    public CreateServiceInstanceBindingRequest createBindingRequest() {
+        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID,
+                getBindResources(), getParameters());
+        req.withBindingId(SB_ID);
+        req.withServiceInstanceId(SI_ID);
         return req;
     }
 
-    public static ServiceInstance getServiceInstance() {
-        return new ServiceInstance(getCreateServiceInstanceRequest());
+    @Bean
+    @Autowired
+    public ServiceBinding serviceBinding(CreateServiceInstanceBindingRequest req) {
+        return new ServiceBinding(req);
     }
 
-    private static CreateServiceInstanceBindingRequest getCreateBindingRequest() {
-        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest("aSdId", "aPlanId", "anAppGuid", null, null);
-        req.withBindingId("12345");
+    @Bean
+    public DeleteServiceInstanceBindingRequest deleteBindingRequest() {
+        return new DeleteServiceInstanceBindingRequest(SI_ID, SB_ID, SD_ID, PLAN_ID,
+                catalogService.getServiceDefinition(SD_ID));
+    }
+
+    @Bean
+    UpdateServiceInstanceRequest updateServiceInstanceRequest() {
+        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
+        req.withServiceDefinition(catalogService.getServiceDefinition(SD_ID));
+        req.withServiceInstanceId(SI_ID);
         return req;
     }
 
-    public static ServiceBinding getServiceInstanceBinding() {
-        return new ServiceBinding(getCreateBindingRequest());
+    @Bean
+    DeleteServiceInstanceRequest deleteServiceInstanceRequest() {
+        DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(SI_ID, SD_ID, PLAN_ID,
+                catalogService.getServiceDefinition(SD_ID));
+        return req;
     }
 }

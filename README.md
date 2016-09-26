@@ -123,7 +123,8 @@ A simple spring boot cf service broker.
 ##Creating your own broker
 
 1. Fork this repo (so you can save your changes into your own repository).
-1. Edit the application.properties and manifest.yml files as described above.
+1. Edit the pom.xml, application.properties and manifest.yml files as needed.
+1. Edit the application.properties and manifest.yml files as needed.
 1. Edit the sample catalog.yml file so that it describes your service and plans. Information on what goes into a catalog file can be found [here.](https://docs.cloudfoundry.org/services/api.html)
 1. Rename the Hello class file to something appropriate for your service.
 1. Add your service implementation to the example methods in the Hello class. Documentation on what the methods do and how to use them is in the Hello.java source file: [file URL here]

@@ -8,3 +8,4 @@ applications:
   services: [ hello-ds ]
   env:
     SPRING_PROFILES_ACTIVE: cloud
+    GREETING: Hello

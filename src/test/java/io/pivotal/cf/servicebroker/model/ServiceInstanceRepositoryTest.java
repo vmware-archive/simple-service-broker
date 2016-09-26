@@ -7,6 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -23,6 +24,9 @@ public class ServiceInstanceRepositoryTest {
 
     @Resource(name = "instanceTemplate")
     private HashOperations<String, String, ServiceInstance> repository;
+
+    @Autowired
+    private ServiceInstance serviceInstance;
 
     @Before
     public void setup() {
@@ -42,28 +46,26 @@ public class ServiceInstanceRepositoryTest {
 
     @Test
     public void instanceInsertedSuccessfully() throws Exception {
-        ServiceInstance si = TestConfig.getServiceInstance();
         assertEquals(0, repository.entries(InstanceService.OBJECT_ID).size());
 
-        repository.put(InstanceService.OBJECT_ID, si.getId(), si);
+        repository.put(InstanceService.OBJECT_ID, serviceInstance.getId(), serviceInstance);
         assertEquals(1, repository.entries(InstanceService.OBJECT_ID).size());
     }
 
     @Test
     public void instanceDeletedSuccessfully() throws Exception {
-        ServiceInstance si = TestConfig.getServiceInstance();
         assertEquals(0, repository.entries(InstanceService.OBJECT_ID).size());
 
-        repository.put(InstanceService.OBJECT_ID, si.getId(), si);
+        repository.put(InstanceService.OBJECT_ID, serviceInstance.getId(), serviceInstance);
         assertEquals(1, repository.entries(InstanceService.OBJECT_ID).size());
 
-        ServiceInstance si2 = repository.get(InstanceService.OBJECT_ID, si.getId());
+        ServiceInstance si2 = repository.get(InstanceService.OBJECT_ID, serviceInstance.getId());
         assertNotNull(si2);
-        assertEquals("anID", si2.getId());
+        assertEquals(TestConfig.SI_ID, si2.getId());
 
-        ServiceInstance si3 = repository.get(InstanceService.OBJECT_ID, "anID");
+        ServiceInstance si3 = repository.get(InstanceService.OBJECT_ID, TestConfig.SI_ID);
         assertNotNull(si3);
-        assertEquals("anID", si3.getId());
+        assertEquals(TestConfig.SI_ID, si3.getId());
 
         repository.delete(InstanceService.OBJECT_ID, si3.getId());
 

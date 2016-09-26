@@ -1,9 +1,8 @@
 package io.pivotal.cf.servicebroker.service;
 
 import io.pivotal.cf.servicebroker.Application;
-import io.pivotal.cf.servicebroker.TestConfig;
-import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
+import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,16 +14,16 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static junit.framework.TestCase.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -34,10 +33,19 @@ public class BindingServiceTest {
 
     @Autowired
     @InjectMocks
-    BindingService serviceInstanceBindingService;
+    BindingService bindingService;
 
     @Mock
     InstanceService instanceService;
+
+    @Autowired
+    private ServiceInstance serviceInstance;
+
+    @Autowired
+    private CreateServiceInstanceBindingRequest createServiceInstanceBindingRequest;
+
+    @Autowired
+    private DeleteServiceInstanceBindingRequest deleteBindingRequest;
 
     @Resource(name = "bindingTemplate")
     private HashOperations<String, String, ServiceBinding> repo;
@@ -46,12 +54,9 @@ public class BindingServiceTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        ServiceInstance si = TestConfig.getServiceInstance();
-
-        when(instanceService.getServiceInstance(Matchers.anyString())).thenReturn(si);
-        when(instanceService.saveInstance(any(ServiceInstance.class))).thenReturn(si);
-
-        when(instanceService.deleteInstance(any(ServiceInstance.class))).thenReturn(si);
+        when(instanceService.getServiceInstance(Matchers.anyString())).thenReturn(serviceInstance);
+        when(instanceService.saveInstance(any(ServiceInstance.class))).thenReturn(serviceInstance);
+        when(instanceService.deleteInstance(any(ServiceInstance.class))).thenReturn(serviceInstance);
 
         Set<String> keys = repo.keys(BindingService.OBJECT_ID);
         for (String key : keys) {
@@ -68,14 +73,12 @@ public class BindingServiceTest {
     }
 
     @Test
-    public void testBinding() throws ServiceBrokerException,
-            ServiceInstanceBindingExistsException {
+    public void testBinding() throws ServiceBrokerException {
+        CreateServiceInstanceAppBindingResponse cresp = (CreateServiceInstanceAppBindingResponse)
+                bindingService.createServiceInstanceBinding(createServiceInstanceBindingRequest);
+        assertNotNull(cresp);
+        assertNotNull(cresp.getCredentials());
 
-        ServiceBinding b = TestConfig.getServiceInstanceBinding();
-        assertNotNull(b);
-        assertNotNull(b.getId());
-        assertEquals("12345", b.getId());
+        bindingService.deleteServiceInstanceBinding(deleteBindingRequest);
     }
-
-    //TODO fix these tests, plus add is tests too
 }
