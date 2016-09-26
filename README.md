@@ -7,13 +7,12 @@ A simple spring boot cf service broker.
   ```bash
   git clone git@github.com:cf-platform-eng/simple-service-broker.git
   cd simple-service-broker
-  git checkout example
   ```
 1. Log into cf and target an org/space where you have space developer privileges.
 1. Create the redis datastore for the broker:
   
   ```bash
-  cf create-service rediscloud 100mb hello-ds
+  cf create-service p-redis shared-vm hello-ds
   ```
 4. Edit the broker password in application.properties (you probably don't want to check this in!)
 1. Edit the manifest.yml file to give your broker an appropriate name.
@@ -30,11 +29,30 @@ A simple spring boot cf service broker.
 8. Register the broker:
   
   ```bash
-  cf create-service-broker <your broker name> user <the password from application.properties> https://<uri of your broker app> [--space-scoped]
+  cf create-service-broker <your broker name> user <the password from application.properties> https://<uri of your broker app>
   ```
-9. See your new service:
+9. See your new broker:
   
   ```bash
+  cf service-brokers
+  Getting service brokers as admin...
+  
+  name                          url
+  ...
+  hello-broker                  https://your-broker-url
+  ...
+  
+  cf service-access
+  Getting service access as admin...
+  ...
+  broker: hello-broker
+     service   plan   access   orgs
+     hello     hi     none
+  ...
+  
+  cf enable-service-access hello
+  Enabling access to all plans of service hello for all orgs as admin...
+
   cf marketplace
   Getting services from marketplace in org your-org / space your-space as you...
   OK
