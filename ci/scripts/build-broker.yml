@@ -1,0 +1,13 @@
+---
+platform: linux
+
+image: docker:///maven#3.2-jdk-7-onbuild
+
+inputs:
+- name: source
+
+outputs:
+- name: app-jar
+
+run:
+  path: source/ciscripts/build-broker.sh

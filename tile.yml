@@ -24,10 +24,10 @@ apply_open_security_group: true         # Apply open security group, default: fa
 packages:
 - name: simple-service-broker
   type: app-broker
+  enable_global_access_to_plans: true
   manifest:
     path: target/simple-service-broker-1.0.0.jar
-    auto_services: p-redis
-    enable_global_access_to_plans: true
+  auto_services: p-redis
 #   memory: 256M
 
 # Include stemcell criteria if you don't want to accept the default.
