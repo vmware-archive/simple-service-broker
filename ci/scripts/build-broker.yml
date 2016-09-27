@@ -1,13 +1,13 @@
 ---
 platform: linux
 
-image: docker:///maven#3.2-jdk-7-onbuild
+image: docker:///maven#3-jdk-8-onbuild
 
 inputs:
-- name: source
+- name: hello-tile-repo
 
 outputs:
 - name: app-jar
 
 run:
-  path: source/ciscripts/build-broker.sh
+  path: hello-tile-repo/ci/scripts/build-broker.sh

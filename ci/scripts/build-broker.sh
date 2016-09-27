@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 
-cd source
+cd hello-tile-repo
 
 mvn -e install
 
