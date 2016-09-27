@@ -22,11 +22,10 @@ apply_open_security_group: true         # Apply open security group, default: fa
 # https://github.com/cf-platform-eng/tile-generator/blob/master/README.md
 #
 packages:
-- name: hello-broker
+- name: simple-service-broker
   type: app-broker
   manifest:
     path: target/simple-service-broker-1.0.0.jar
-    command: java -jar simple-service-broker-1.0.0.jar
     auto_services: p-redis
     enable_global_access_to_plans: true
 #   memory: 256M
@@ -67,7 +66,7 @@ forms:
     default: 'Hello'
     label: Greeting
     description: What the broker says to the user in the logs
-  - name: api-_version
+  - name: api_version
     type: string
     default: '2.9'
     label: Broker API Version
