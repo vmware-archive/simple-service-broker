@@ -1,0 +1,83 @@
+---
+# The high-level description of your tile.
+# Replace these properties with real values.
+#
+name: simple-service-broker # By convention lowercase with dashes
+icon_file: resources/pivotal.png
+label: Hello Broker
+description: A simple demo broker that can be used as a template for your broker.
+
+# Global defaults (all optional)
+#
+# org: test-org                         # Name of org to create for your apps
+# org_quota: 4096                       # Memory quota for that org in MB
+# space: test-space                     # Name of space to create for your apps
+apply_open_security_group: true         # Apply open security group, default: false
+
+# Specify the packages to be included in your tile.
+# The format of the section to include depends on the type
+# of package you are describing. For fragments of each type
+# that you can copy & paste, see:
+#
+# https://github.com/cf-platform-eng/tile-generator/blob/master/README.md
+#
+packages:
+- name: hello-broker
+  type: app-broker
+  manifest:
+    path: target/simple-service-broker-1.0.0.jar
+    command: java -jar simple-service-broker-1.0.0.jar
+    auto_services: p-redis
+    enable_global_access_to_plans: true
+#   memory: 256M
+
+# Include stemcell criteria if you don't want to accept the default.
+# Since this stemcell is only used to run pre and post errands, we
+# strongly recommend you leave this alone so that your tile always
+# runs with the latest stemcell.
+#
+# stemcell_criteria:
+#   os: ubuntu-trusty
+#   requires_cpi: false
+#   version: '3062'
+
+# Add properties you want to pass to your applications.
+# Properties specified here will not be configurable by the user.
+#
+# properties:
+# - name: example_property
+#   type: string
+#   default: specify a value
+#   label: Label for the field on the GUI
+#   description: Longer description of the field's purpose
+
+# Uncomment this section if you want to display forms with configurable
+# properties in Ops Manager. These properties will be passed to your
+# applications as environment variables. You can also refer to them
+# elsewhere in this template by using:
+#     (( .properties.<property-name> ))
+# 
+forms:
+- name: hello_properties
+  label: Hello Broker
+  description: Hello Broker properties
+  properties:
+  - name: greeting
+    type: string
+    default: 'Hello'
+    label: Greeting
+    description: What the broker says to the user in the logs
+  - name: api-_version
+    type: string
+    default: '2.9'
+    label: Broker API Version
+    description: Which service broker api this broker supports
+
+# Add any dependencies your tile has on other installed products.
+# This is often appropriate when using automatic service provisioning
+# for any of your packages above, with services provided by other
+# products.
+#
+# requires_product_versions:
+# - name: p-mysql
+#   version: '~> 1.7'

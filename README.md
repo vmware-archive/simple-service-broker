@@ -145,6 +145,11 @@ A simple spring boot cf service broker.
 1. Edit the application.properties and manifest.yml files as needed.
 1. Edit the sample catalog.yml file so that it describes your service and plans. Information on what goes into a catalog file can be found [here.](https://docs.cloudfoundry.org/services/api.html)
 1. Rename the Hello class file to something appropriate for your service.
-1. Add your service implementation to the example methods in the Hello class. Documentation on what the methods do and how to use them is in the Hello.java source file: [file URL here]
+1. Add your service implementation to the example methods in the Hello class. Documentation on what the methods do and how to use them is in the Hello.java [source file.](https://github.com/cf-platform-eng/simple-service-broker/blob/master/src/main/java/io/pivotal/cf/servicebroker/broker/HelloService.java)
 1. Create some unit tests (or modify the existing tests) to test your broker.
 1. Follow the steps outlined above to build, deploy and verify your broker.
+
+##Creating a tile for your broker
+
+1. See the instructions here for checking out and using the tile-generator tool [here.](https://github.com/cf-platform-eng/tile-generator)
+1. A "starter" tile.yml file is already included for the hello broker. Edit this file to configure the tile generator as needed for your broker.
