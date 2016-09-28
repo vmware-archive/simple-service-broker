@@ -57,7 +57,7 @@ resources:
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
     versioned_file: remove-tile-log-1-6.txt
-- name: hello-tile
+- name: broker-tile
   type: s3
   source:
     access_key_id: {{aws-key-id}}
@@ -115,15 +115,15 @@ jobs:
     file: tile-repo/ci/build-tile/task.yml
   - put: tile-history
     params:
-      from: tile-history-.*\.yml
+      file: tile-history-new/*.yml
   - put: broker-tile
     params:
-      from: tile-repo/.*\.pivotal
+      file: broker-tile/*.pivotal
 
 - name: claim-pcf
   plan:
   - aggregate:
-    - get: hello-tile
+    - get: broker-tile
       trigger: true
       passed:
       - build-tile
@@ -134,7 +134,7 @@ jobs:
   plan:
   - aggregate:
     - get: tile-generator-repo
-    - get: hello-tile
+    - get: broker-tile
     - get: pcf-environment
       passed:
       - claim-pcf
@@ -151,7 +151,7 @@ jobs:
         - log/deploy-tile-log.txt
         - tile-generator-repo
         - tile-repo
-        - hello-tile
+        - broker-tile
         - pcf-environment
         dir: ""
       inputs:
@@ -159,7 +159,7 @@ jobs:
         path: ""
       - name: pcf-environment
         path: ""
-      - name: hello-tile
+      - name: broker-tile
         path: ""
       - name: tile-repo
         path: ""
@@ -190,7 +190,7 @@ jobs:
       - deploy-tile
       trigger: true
     - get: tile-repo
-    - get: hello-tile
+    - get: broker-tile
   - task: run-deployment-tests
     config:
       platform: linux
@@ -206,7 +206,7 @@ jobs:
         - sample-cloud-app-jar
         - test-app-jar
         - log
-        - hello-tile
+        - broker-tile
         dir: ""
       inputs:
       - name: tile-generator-repo
@@ -219,7 +219,7 @@ jobs:
         path: ""
       - name: test-app-jar
         path: ""
-      - name: hello-tile
+      - name: broker-tile
         path: ""
       outputs:
       - name: log
@@ -280,7 +280,7 @@ jobs:
         params:
           channel: '@jaredgordon'
           icon_emoji: ':robot_face:'
-          text: (1.6) remove-tile failed; check hello pipeline
+          text: (1.6) remove-tile failed; check pipeline
           username: Build pipeline
       - put: pcf-environment
         params:
