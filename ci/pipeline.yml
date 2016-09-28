@@ -116,9 +116,10 @@ jobs:
   - put: tile-history
     params:
       from: tile-history-.*\.yml
-  - put: hello-tile
+  - put: broker-tile
     params:
-      from: hello-tile/.*\.pivotal
+      from: tile-repo/.*\.pivotal
+
 - name: claim-pcf
   plan:
   - aggregate:
