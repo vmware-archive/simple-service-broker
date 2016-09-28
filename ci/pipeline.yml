@@ -49,14 +49,14 @@ resources:
     access_key_id: {{aws-key-id}}
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
-    versioned_file: test-deploy-log-1-6.txt
+    versioned_file: test-deploy-log.txt
 - name: remove-tile-log
   type: s3
   source:
     access_key_id: {{aws-key-id}}
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
-    versioned_file: remove-tile-log-1-6.txt
+    versioned_file: remove-tile-log.txt
 - name: broker-tile
   type: s3
   source:
