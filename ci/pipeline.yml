@@ -110,6 +110,8 @@ jobs:
     - get: tile-repo
       trigger: true
     - get: broker-jar
+      passed:
+          - build-broker
     - get: tile-history
   - task: build-tile
     file: tile-repo/ci/build-tile/task.yml
@@ -130,6 +132,7 @@ jobs:
     - put: pcf-environment
       params:
         acquire: true
+
 - name: deploy-tile
   plan:
   - aggregate:
