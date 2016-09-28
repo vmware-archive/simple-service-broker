@@ -108,10 +108,10 @@ jobs:
   - aggregate:
     - get: tile-generator-repo
     - get: tile-repo
-      trigger: true
     - get: broker-jar
+      trigger: true
       passed:
-          - build-broker
+      - build-broker
     - get: tile-history
   - task: build-tile
     file: tile-repo/ci/build-tile/task.yml
