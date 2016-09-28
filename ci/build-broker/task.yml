@@ -1,0 +1,13 @@
+---
+platform: linux
+
+image: docker:///maven#3-jdk-8-onbuild
+
+inputs:
+- name: tile-repo
+
+outputs:
+- name: broker-jar
+
+run:
+  path: tile-repo/ci/build-broker/task.sh

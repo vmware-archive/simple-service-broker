@@ -1,0 +1,325 @@
+groups:
+- name: all
+  jobs:
+  - build-broker
+  - claim-pcf
+  - deploy-tile
+  - test-deploy
+  - remove-tile
+  - release-pcf
+- name: manual
+  jobs:
+  - claim-pcf
+  - manual-release
+resources:
+- name: tile-repo
+  type: git
+  source:
+    branch: master
+    uri: http://github.com/cf-platform-eng/simple-service-broker
+- name: tile-generator-repo
+  type: git
+  source:
+    branch: master
+    ignore_paths:
+    - sample
+    uri: http://github.com/cf-platform-eng/tile-generator.git
+- name: pcf-environment
+  type: pool
+  source:
+    branch: master
+    pool: pcf
+    private_key: {{github-pool-private-key}}
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: https://hooks.slack.com/services/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
+- name: deploy-tile-log
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    secret_access_key: {{aws-key}}
+    versioned_file: deploy-tile-log.txt
+- name: test-deploy-log
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    secret_access_key: {{aws-key}}
+    versioned_file: test-deploy-log-1-6.txt
+- name: remove-tile-log
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    secret_access_key: {{aws-key}}
+    versioned_file: remove-tile-log-1-6.txt
+- name: hello-tile
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    regexp: .*-(?P<version>.*)\.pivotal
+    secret_access_key: {{aws-key}}
+- name: broker-app
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    secret_access_key: {{aws-key}}
+- name: tile-history
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    regexp: tile\-history-(?P<version>.*)\.yml
+    secret_access_key: {{aws-key}}
+- name: test-deploy-report
+  type: s3
+  source:
+    access_key_id: {{aws-key-id}}
+    bucket: {{bucket-name}}
+    regexp: test-deploy-report-(?P<version>.*)\.tgz
+    secret_access_key: {{aws-key}}
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+jobs:
+- name: build-broker
+  plan:
+  - get: tile-repo
+    trigger: true
+  - task: build-broker
+    file: tile-repo/ci/build-broker/task.yml
+    put: broker-app
+    params:
+      file: broker-jar/*.jar
+- name: build-tile
+  plan:
+  - aggregate:
+    - get: tile-generator-repo
+    - get: tile-repo
+      trigger: true
+    - get: tile-history
+  - task: build-hello-tile
+    config:
+      platform: linux
+      image: docker:///guidowb/tile-pipeline
+      run:
+        path: ci/tile-build.sh
+        args:
+        - tile-generator-repo
+        - tile-repo
+        - tile-history
+        - hello-tile
+      inputs:
+      - name: tile-generator-repo
+        path: ""
+      - name: tile-repo
+        path: ""
+      - name: tile-history
+        path: ""
+      outputs:
+      - name: hello-tile
+        path: ""
+  - put: tile-history
+    params:
+      from: tile-history-.*\.yml
+  - put: hello-tile
+    params:
+      from: hello-tile/.*\.pivotal
+- name: claim-pcf
+  plan:
+  - aggregate:
+    - get: hello-tile
+      trigger: true
+      passed:
+      - build-tile
+    - put: pcf-environment
+      params:
+        acquire: true
+- name: deploy-tile
+  plan:
+  - aggregate:
+    - get: tile-generator-repo
+    - get: hello-tile
+    - get: pcf-environment
+      passed:
+      - claim-pcf
+      trigger: true
+    - get: tile-repo
+  - task: run-deploy-tile
+    config:
+      platform: linux
+      image: docker:///guidowb/tile-pipeline
+      run:
+        path: tile-repo/ci/scripts/log-output.sh
+        args:
+        - tile-repo/ci/scripts/run-deploy-tile.sh
+        - log/deploy-tile-log.txt
+        - tile-generator-repo
+        - tile-repo
+        - hello-tile
+        - pcf-environment
+        dir: ""
+      inputs:
+      - name: tile-generator-repo
+        path: ""
+      - name: pcf-environment
+        path: ""
+      - name: hello-tile
+        path: ""
+      - name: tile-repo
+        path: ""
+      outputs:
+      - name: log
+        path: ""
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: '@jaredgordon'
+          icon_emoji: ':robot_face:'
+          text: (1.6) deploy-tile failed check main pipeline
+          username: Build pipeline
+      - put: pcf-environment
+        params:
+          release: pcf-environment
+    ensure:
+      put: deploy-tile-log
+      params:
+        file: log/deploy-tile-log.txt
+- name: test-deploy
+  plan:
+  - aggregate:
+    - get: tile-generator-repo
+    - get: pcf-environment
+      passed:
+      - deploy-tile
+      trigger: true
+    - get: tile-repo
+    - get: hello-tile
+  - task: run-deployment-tests
+    config:
+      platform: linux
+      image: docker:///guidowb/tile-pipeline
+      run:
+        path: tile-repo/ci/scripts/log-output.sh
+        args:
+        - tile-repo/ci/scripts/run-test-deploy.sh
+        - log/test-deploy-log.txt
+        - tile-generator-repo
+        - pcf-environment
+        - tile-repo
+        - sample-cloud-app-jar
+        - test-app-jar
+        - log
+        - hello-tile
+        dir: ""
+      inputs:
+      - name: tile-generator-repo
+        path: ""
+      - name: pcf-environment
+        path: ""
+      - name: tile-repo
+        path: ""
+      - name: sample-cloud-app-jar
+        path: ""
+      - name: test-app-jar
+        path: ""
+      - name: hello-tile
+        path: ""
+      outputs:
+      - name: log
+        path: ""
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: '@jaredgordon'
+          icon_emoji: ':robot_face:'
+          text: (1.6) test-deploy failed; check main pipeline
+          username: Build pipeline
+      - put: pcf-environment
+        params:
+          release: pcf-environment
+    ensure:
+      aggregate:
+      - put: test-deploy-log
+        params:
+          file: log/test-deploy-log.txt
+      - put: test-deploy-report
+        params:
+          file: log/test-deploy-report-*.tgz
+- name: remove-tile
+  plan:
+  - aggregate:
+    - get: tile-generator-repo
+    - get: tile-repo
+    - get: pcf-environment
+      passed:
+      - test-deploy
+      trigger: true
+  - task: remove-tile
+    config:
+      platform: linux
+      image: docker:///guidowb/tile-pipeline
+      run:
+        path: tile-repo/ci/scripts/log-output.sh
+        args:
+        - tile-repo/ci/scripts/run-remove-tile.sh
+        - log/remove-tile-log.txt
+        - tile-generator-repo
+        - pcf-environment
+        dir: ""
+      inputs:
+      - name: tile-generator-repo
+        path: ""
+      - name: pcf-environment
+        path: ""
+      - name: tile-repo
+        path: ""
+      outputs:
+      - name: log
+        path: ""
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: '@jaredgordon'
+          icon_emoji: ':robot_face:'
+          text: (1.6) remove-tile failed; check hello pipeline
+          username: Build pipeline
+      - put: pcf-environment
+        params:
+          release: pcf-environment
+    ensure:
+      put: remove-tile-log
+      params:
+        file: log/remove-tile-log.txt
+  - put: slack-alert
+    params:
+      channel: '@jaredgordon'
+      icon_emoji: ':robot_face:'
+      text: (1.6) Successfully built/deployed/tested/removed new tile
+      username: Build pipeline
+- name: release-pcf
+  plan:
+  - get: pcf-environment
+    passed:
+    - remove-tile
+    trigger: true
+  - put: pcf-environment
+    params:
+      release: pcf-environment
+- name: manual-release
+  plan:
+  - get: pcf-environment
+  - put: pcf-environment
+    params:
+      release: pcf-environment
