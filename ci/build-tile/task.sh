@@ -6,6 +6,7 @@ if [ -n "${HISTORY}" ]; then
 fi
 
 cd tile-repo
+mkdir target
 cp ../broker-jar/*.jar target/
 ../tile-generator-repo/bin/tile build
 
