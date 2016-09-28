@@ -2,6 +2,7 @@ groups:
 - name: all
   jobs:
   - build-broker
+  - build-tile
   - claim-pcf
   - deploy-tile
   - test-deploy
@@ -34,7 +35,7 @@ resources:
 - name: slack-alert
   type: slack-notification
   source:
-    url: https://hooks.slack.com/services/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
+    url: https://hooks.slack.com/services/{{slack-token}}
 - name: deploy-tile-log
   type: s3
   source:
@@ -63,11 +64,12 @@ resources:
     bucket: {{bucket-name}}
     regexp: .*-(?P<version>.*)\.pivotal
     secret_access_key: {{aws-key}}
-- name: broker-app
+- name: broker-jar
   type: s3
   source:
     access_key_id: {{aws-key-id}}
     bucket: {{bucket-name}}
+    regexp: .*-(?P<version>.*)\.jar
     secret_access_key: {{aws-key}}
 - name: tile-history
   type: s3
@@ -89,6 +91,7 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
+
 jobs:
 - name: build-broker
   plan:
@@ -96,37 +99,20 @@ jobs:
     trigger: true
   - task: build-broker
     file: tile-repo/ci/build-broker/task.yml
-    put: broker-app
+  - put: broker-jar
     params:
       file: broker-jar/*.jar
+
 - name: build-tile
   plan:
   - aggregate:
     - get: tile-generator-repo
     - get: tile-repo
       trigger: true
+    - get: broker-jar
     - get: tile-history
-  - task: build-hello-tile
-    config:
-      platform: linux
-      image: docker:///guidowb/tile-pipeline
-      run:
-        path: ci/tile-build.sh
-        args:
-        - tile-generator-repo
-        - tile-repo
-        - tile-history
-        - hello-tile
-      inputs:
-      - name: tile-generator-repo
-        path: ""
-      - name: tile-repo
-        path: ""
-      - name: tile-history
-        path: ""
-      outputs:
-      - name: hello-tile
-        path: ""
+  - task: build-tile
+    file: tile-repo/ci/build-tile/task.yml
   - put: tile-history
     params:
       from: tile-history-.*\.yml
