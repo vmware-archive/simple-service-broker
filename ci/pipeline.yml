@@ -13,11 +13,22 @@ groups:
   - claim-pcf
   - manual-release
 resources:
+
+- name: version
+  type: semver
+  source:
+    bucket: {{bucket-name}}
+    key: current-version
+    access_key_id: {{aws-key-id}}
+    secret_access_key: {{aws-key}}
+    initial_version: 1.0.1
+
 - name: tile-repo
   type: git
   source:
     branch: master
     uri: http://github.com/cf-platform-eng/simple-service-broker
+
 - name: tile-generator-repo
   type: git
   source:
@@ -25,6 +36,7 @@ resources:
     ignore_paths:
     - sample
     uri: http://github.com/cf-platform-eng/tile-generator.git
+
 - name: pcf-environment
   type: pool
   source:
@@ -32,10 +44,12 @@ resources:
     pool: pcf
     private_key: {{github-pool-private-key}}
     uri: git@github.com:cf-platform-eng/pipeline-resource-pool
+
 - name: slack-alert
   type: slack-notification
   source:
     url: https://hooks.slack.com/services/{{slack-token}}
+
 - name: deploy-tile-log
   type: s3
   source:
@@ -43,6 +57,7 @@ resources:
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
     versioned_file: deploy-tile-log.txt
+
 - name: test-deploy-log
   type: s3
   source:
@@ -50,6 +65,7 @@ resources:
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
     versioned_file: test-deploy-log.txt
+
 - name: remove-tile-log
   type: s3
   source:
@@ -57,6 +73,7 @@ resources:
     bucket: {{bucket-name}}
     secret_access_key: {{aws-key}}
     versioned_file: remove-tile-log.txt
+
 - name: broker-tile
   type: s3
   source:
@@ -64,6 +81,7 @@ resources:
     bucket: {{bucket-name}}
     regexp: .*-(?P<version>.*)\.pivotal
     secret_access_key: {{aws-key}}
+
 - name: broker-jar
   type: s3
   source:
@@ -71,6 +89,7 @@ resources:
     bucket: {{bucket-name}}
     regexp: .*-(?P<version>.*)\.jar
     secret_access_key: {{aws-key}}
+
 - name: tile-history
   type: s3
   source:
@@ -78,6 +97,7 @@ resources:
     bucket: {{bucket-name}}
     regexp: tile\-history-(?P<version>.*)\.yml
     secret_access_key: {{aws-key}}
+
 - name: test-deploy-report
   type: s3
   source:
@@ -85,6 +105,7 @@ resources:
     bucket: {{bucket-name}}
     regexp: test-deploy-report-(?P<version>.*)\.tgz
     secret_access_key: {{aws-key}}
+
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -94,21 +115,27 @@ resource_types:
 
 jobs:
 - name: build-broker
+  serial_groups: [version]
   plan:
   - get: tile-repo
     trigger: true
+  - get: version
   - task: build-broker
     file: tile-repo/ci/build-broker/task.yml
   - put: broker-jar
-    params:
-      file: broker-jar/*.jar
+    params: {file: broker-jar/*.jar}
+  - put: version
+    params: {file: version/number}
 
 - name: build-tile
+  serial_groups: [version]
   plan:
   - aggregate:
     - get: tile-generator-repo
     - get: tile-repo
     - get: broker-jar
+    - get: version
+      params: {bump: final}
       trigger: true
       passed:
       - build-broker
@@ -121,6 +148,8 @@ jobs:
   - put: broker-tile
     params:
       file: broker-tile/*.pivotal
+  - put: version
+    params: {file: version/number}
 
 - name: claim-pcf
   plan:

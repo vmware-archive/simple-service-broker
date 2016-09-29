@@ -5,6 +5,7 @@ image: docker:///maven#3-jdk-8-onbuild
 
 inputs:
 - name: tile-repo
+- name: version
 
 outputs:
 - name: broker-jar
