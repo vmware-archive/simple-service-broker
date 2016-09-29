@@ -6,8 +6,8 @@ if [ -n "${HISTORY}" ]; then
 fi
 
 cd tile-repo
-mkdir target
-cp ../broker-jar/*.jar target/
+mkdir -p resources
+cp ../broker-jar/*.jar resources/broker-app.jar
 ../tile-generator-repo/bin/tile build
 
 VERSION=`grep '^version:' tile-history.yml | sed 's/^version: //'`

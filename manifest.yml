@@ -4,7 +4,7 @@ applications:
   memory: 512M
   instances: 1
   buildpack: java_buildpack_offline
-  path: target/simple-service-broker-1.0.0.jar
+  path: resources/broker-app.jar
   services: [ hello-ds ]
   env:
     SPRING_PROFILES_ACTIVE: cloud

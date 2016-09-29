@@ -26,7 +26,7 @@ packages:
   type: app-broker
   enable_global_access_to_plans: true
   manifest:
-    path: target/simple-service-broker-1.0.0.jar
+    path: resources/broker-app.jar
   auto_services: p-redis
 #   memory: 256M
 

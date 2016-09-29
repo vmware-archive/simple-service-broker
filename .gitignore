@@ -4,3 +4,4 @@
 *.rdb
 /release/
 /product/
+/resources/*.jar

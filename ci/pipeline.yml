@@ -134,11 +134,10 @@ jobs:
     - get: tile-generator-repo
     - get: tile-repo
     - get: broker-jar
-    - get: version
-      params: {bump: final}
       trigger: true
       passed:
       - build-broker
+    - get: version
     - get: tile-history
   - task: build-tile
     file: tile-repo/ci/build-tile/task.yml
@@ -148,8 +147,6 @@ jobs:
   - put: broker-tile
     params:
       file: broker-tile/*.pivotal
-  - put: version
-    params: {file: version/number}
 
 - name: claim-pcf
   plan:
@@ -213,6 +210,7 @@ jobs:
       put: deploy-tile-log
       params:
         file: log/deploy-tile-log.txt
+
 - name: test-deploy
   plan:
   - aggregate:
@@ -275,6 +273,7 @@ jobs:
       - put: test-deploy-report
         params:
           file: log/test-deploy-report-*.tgz
+
 - name: remove-tile
   plan:
   - aggregate:
@@ -327,12 +326,16 @@ jobs:
       icon_emoji: ':robot_face:'
       text: (1.6) Successfully built/deployed/tested/removed new tile
       username: Build pipeline
+
 - name: release-pcf
+  serial_groups: [version]
   plan:
   - get: pcf-environment
     passed:
     - remove-tile
     trigger: true
+  - get: version
+    params: {bump: final}
   - put: pcf-environment
     params:
       release: pcf-environment
@@ -342,3 +345,5 @@ jobs:
   - put: pcf-environment
     params:
       release: pcf-environment
+  - put: version
+    params: {file: version/number}
