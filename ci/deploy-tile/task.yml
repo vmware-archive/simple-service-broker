@@ -1,0 +1,23 @@
+---
+platform: linux
+
+image: docker:///guidowb/tile-pipeline
+
+inputs:
+- name: tile-generator-repo
+- name: pcf-environment
+- name: broker-tile
+- name: tile-repo
+
+outputs:
+- name: log
+
+run:
+  path: tile-repo/ci/scripts/log-output.sh
+  args:
+  - tile-repo/ci/deploy-tile/task.sh
+  - log/deploy-tile-log.txt
+  - tile-generator-repo
+  - tile-repo
+  - broker-tile
+  - pcf-environment

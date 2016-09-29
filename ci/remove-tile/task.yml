@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image: docker:///guidowb/tile-pipeline
+
+inputs:
+- name: tile-generator-repo
+- name: pcf-environment
+- name: tile-repo
+
+outputs:
+- name: log
+
+run:
+  path: tile-repo/ci/scripts/log-output.sh
+  args:
+  - tile-repo/ci/remove-tile/task.sh
+  - log/remove-tile-log.txt
+  - tile-generator-repo
+  - pcf-environment

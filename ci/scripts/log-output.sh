@@ -1,6 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/sh -e
 
-set -e
 set -o pipefail
 
 SCRIPT=$1; shift

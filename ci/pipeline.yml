@@ -169,32 +169,8 @@ jobs:
       - claim-pcf
       trigger: true
     - get: tile-repo
-  - task: run-deploy-tile
-    config:
-      platform: linux
-      image: docker:///guidowb/tile-pipeline
-      run:
-        path: tile-repo/ci/scripts/log-output.sh
-        args:
-        - tile-repo/ci/scripts/run-deploy-tile.sh
-        - log/deploy-tile-log.txt
-        - tile-generator-repo
-        - tile-repo
-        - broker-tile
-        - pcf-environment
-        dir: ""
-      inputs:
-      - name: tile-generator-repo
-        path: ""
-      - name: pcf-environment
-        path: ""
-      - name: broker-tile
-        path: ""
-      - name: tile-repo
-        path: ""
-      outputs:
-      - name: log
-        path: ""
+    - task: deploy-tile
+      file: tile-repo/ci/deploy-tile/task.yml
     on_failure:
       aggregate:
       - put: slack-alert
@@ -221,46 +197,15 @@ jobs:
       trigger: true
     - get: tile-repo
     - get: broker-tile
-  - task: run-deployment-tests
-    config:
-      platform: linux
-      image: docker:///guidowb/tile-pipeline
-      run:
-        path: tile-repo/ci/scripts/log-output.sh
-        args:
-        - tile-repo/ci/scripts/run-test-deploy.sh
-        - log/test-deploy-log.txt
-        - tile-generator-repo
-        - pcf-environment
-        - tile-repo
-        - sample-cloud-app-jar
-        - test-app-jar
-        - log
-        - broker-tile
-        dir: ""
-      inputs:
-      - name: tile-generator-repo
-        path: ""
-      - name: pcf-environment
-        path: ""
-      - name: tile-repo
-        path: ""
-      - name: sample-cloud-app-jar
-        path: ""
-      - name: test-app-jar
-        path: ""
-      - name: broker-tile
-        path: ""
-      outputs:
-      - name: log
-        path: ""
+    - task: test-deploy
+      file: tile-repo/ci/test-deploy/task.yml
     on_failure:
       aggregate:
       - put: slack-alert
         params:
           channel: '@jaredgordon'
           icon_emoji: ':robot_face:'
-          text: (1.6) test-deploy failed; check main pipeline
+          text: test-deploy failed; check main pipeline
           username: Build pipeline
       - put: pcf-environment
         params:
@@ -283,28 +228,8 @@ jobs:
       passed:
       - test-deploy
       trigger: true
-  - task: remove-tile
-    config:
-      platform: linux
-      image: docker:///guidowb/tile-pipeline
-      run:
-        path: tile-repo/ci/scripts/log-output.sh
-        args:
-        - tile-repo/ci/scripts/run-remove-tile.sh
-        - log/remove-tile-log.txt
-        - tile-generator-repo
-        - pcf-environment
-        dir: ""
-      inputs:
-      - name: tile-generator-repo
-        path: ""
-      - name: pcf-environment
-        path: ""
-      - name: tile-repo
-        path: ""
-      outputs:
-      - name: log
-        path: ""
+    - task: test-deploy
+      file: tile-repo/ci/remove-tile/task.yml
     on_failure:
       aggregate:
       - put: slack-alert
@@ -324,7 +249,7 @@ jobs:
     params:
       channel: '@jaredgordon'
       icon_emoji: ':robot_face:'
-      text: (1.6) Successfully built/deployed/tested/removed new tile
+      text: Successfully built/deployed/tested/removed new tile
       username: Build pipeline
 
 - name: release-pcf
@@ -339,11 +264,12 @@ jobs:
   - put: pcf-environment
     params:
       release: pcf-environment
+  - put: version
+    params: {file: version/number}
+
 - name: manual-release
   plan:
   - get: pcf-environment
   - put: pcf-environment
     params:
       release: pcf-environment
-  - put: version
-    params: {file: version/number}
