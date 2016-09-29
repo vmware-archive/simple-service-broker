@@ -48,7 +48,7 @@ resources:
 - name: slack-alert
   type: slack-notification
   source:
-    url: https://hooks.slack.com/services/{{slack-token}}
+    url: {{slack-url}}
 
 - name: deploy-tile-log
   type: s3
@@ -201,7 +201,7 @@ jobs:
         params:
           channel: '@jaredgordon'
           icon_emoji: ':robot_face:'
-          text: (1.6) deploy-tile failed check main pipeline
+          text: deploy-tile failed check main pipeline
           username: Build pipeline
       - put: pcf-environment
         params:
