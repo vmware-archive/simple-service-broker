@@ -120,6 +120,7 @@ jobs:
   - get: tile-repo
     trigger: true
   - get: version
+    params: {bump: patch}
   - task: build-broker
     file: tile-repo/ci/build-broker/task.yml
   - put: broker-jar
@@ -149,26 +150,26 @@ jobs:
       file: broker-tile/*.pivotal
 
 - name: claim-pcf
+  serial_groups: [version]
   plan:
   - aggregate:
     - get: broker-tile
       trigger: true
-      passed:
-      - build-tile
     - put: pcf-environment
       params:
         acquire: true
 
 - name: deploy-tile
+  serial_groups: [version]
   plan:
   - aggregate:
     - get: tile-generator-repo
     - get: broker-tile
-    - get: pcf-environment
       passed:
       - claim-pcf
-      trigger: true
+    - get: pcf-environment
     - get: tile-repo
+      trigger: true
     - task: deploy-tile
       file: tile-repo/ci/deploy-tile/task.yml
     on_failure:
@@ -182,10 +183,6 @@ jobs:
       - put: pcf-environment
         params:
           release: pcf-environment
-    ensure:
-      put: deploy-tile-log
-      params:
-        file: log/deploy-tile-log.txt
 
 - name: test-deploy
   plan:

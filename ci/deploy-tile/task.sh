@@ -1,9 +1,9 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 
-TILE_GEN_DIR="$( cd "$1" && pwd )"
-REPO_DIR="$( cd "$2" && pwd )"
-TILE_DIR="$( cd "$3" && pwd )"
-POOL_DIR="$( cd "$4" && pwd )"
+TILE_GEN_DIR="$( cd tile-generator-repo && pwd )"
+REPO_DIR="$( cd tile-repo  && pwd )"
+TILE_DIR="$( cd broker-tile && pwd )"
+POOL_DIR="$( cd pcf-environment && pwd )"
 
 BIN_DIR="$( cd "${TILE_GEN_DIR}/bin" && pwd )"
 
