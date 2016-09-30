@@ -5,9 +5,9 @@ image: docker:///guidowb/tile-pipeline
 
 inputs:
 - name: tile-generator-repo
-- name: pcf-environment
-- name: broker-tile
 - name: tile-repo
+- name: broker-tile
+- name: pcf-environment
 
 run:
   path: tile-repo/ci/deploy-tile/task.sh

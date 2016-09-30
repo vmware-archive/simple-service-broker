@@ -155,6 +155,8 @@ jobs:
   - aggregate:
     - get: broker-tile
       trigger: true
+      passed:
+      - build-tile
     - put: pcf-environment
       params:
         acquire: true
@@ -164,12 +166,12 @@ jobs:
   plan:
   - aggregate:
     - get: tile-generator-repo
+    - get: tile-repo
     - get: broker-tile
       passed:
       - claim-pcf
-    - get: pcf-environment
-    - get: tile-repo
       trigger: true
+    - get: pcf-environment
     - task: deploy-tile
       file: tile-repo/ci/deploy-tile/task.yml
     on_failure:
