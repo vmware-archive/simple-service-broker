@@ -162,29 +162,37 @@ jobs:
         acquire: true
 
 - name: deploy-tile
-  serial_groups: [version]
   plan:
   - aggregate:
     - get: tile-generator-repo
-    - get: tile-repo
     - get: broker-tile
       passed:
       - claim-pcf
       trigger: true
     - get: pcf-environment
-    - task: deploy-tile
-      file: tile-repo/ci/deploy-tile/task.yml
-    on_failure:
-      aggregate:
-      - put: slack-alert
-        params:
-          channel: '@jaredgordon'
-          icon_emoji: ':robot_face:'
-          text: deploy-tile failed check main pipeline
-          username: Build pipeline
-      - put: pcf-environment
-        params:
-          release: pcf-environment
+      passed:
+      - claim-pcf
+    - get: tile-repo
+  - task: run-deploy-tile
+    config:
+      platform: linux
+      image: docker:///guidowb/tile-pipeline
+      run:
+        path: tile-repo/ci/deploy-tile/task.sh
+        args:
+        - tile-generator-repo
+        - apigee-tile-repo
+        - apigee-tile
+        - pcf-environment
+      inputs:
+      - name: tile-generator-repo
+        path: ""
+      - name: pcf-environment
+        path: ""
+      - name: broker-tile
+        path: ""
+      - name: tile-repo
+        path: ""
 
 - name: test-deploy
   plan:
