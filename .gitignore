@@ -1,4 +1,4 @@
-/target/
+target
 *.iml
 .idea/
 *.rdb
@@ -6,3 +6,4 @@
 /product/
 /resources/*.jar
 tile-history*.*
+/env/
