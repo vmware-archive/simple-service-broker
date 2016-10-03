@@ -4,9 +4,9 @@ import feign.Feign;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class HelloRepositoryFactory {
+public class HelloRepositoryFactory {
 
-    HelloRepository create(HelloServiceInfo info) {
+    public HelloRepository create(HelloServiceInfo info) {
         log.info("creating helloRepository with info: " + info);
 
         return Feign.builder()

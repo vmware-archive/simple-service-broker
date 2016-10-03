@@ -4,7 +4,7 @@ import lombok.ToString;
 import org.springframework.cloud.service.ServiceInfo;
 
 @ToString
-class HelloServiceInfo implements ServiceInfo {
+public class HelloServiceInfo implements ServiceInfo {
 
     static final String URI_SCHEME = "hello";
 
@@ -14,7 +14,7 @@ class HelloServiceInfo implements ServiceInfo {
     private String adminId;
     private String adminPw;
 
-    HelloServiceInfo(String id, String host, String port, String adminId, String adminPw) {
+    public HelloServiceInfo(String id, String host, String port, String adminId, String adminPw) {
         super();
         this.id = id;
         this.host = host;
@@ -28,7 +28,7 @@ class HelloServiceInfo implements ServiceInfo {
         return id;
     }
 
-    String getUri() {
+    public String getUri() {
         return "http://" + host + ":" + port;
     }
 }
