@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 @ContextConfiguration(classes = TestConfig.class, loader = AnnotationConfigContextLoader.class)
 public class HelloRepositoryTest {
 
-    private static final String USER = "foo";
+    private static final String USER = "foo" + System.currentTimeMillis();
     private static final String PW = "bar";
 
     @Autowired
@@ -39,7 +39,7 @@ public class HelloRepositoryTest {
 
         String greeting = helloRepository.greeting(USER);
         assertNotNull(greeting);
-        assertEquals("Hello, foo!", greeting);
+        assertEquals("Hello, " + USER + "!", greeting);
 
         helloRepository.deleteUser(USER);
 

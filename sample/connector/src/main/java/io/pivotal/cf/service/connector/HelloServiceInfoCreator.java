@@ -9,7 +9,7 @@ import java.util.Map;
 @Slf4j
 public class HelloServiceInfoCreator extends CloudFoundryServiceInfoCreator<HelloServiceInfo> {
 
-    HelloServiceInfoCreator() {
+    public HelloServiceInfoCreator() {
         super(new Tags(HelloServiceInfo.URI_SCHEME), HelloServiceInfo.URI_SCHEME);
     }
 
