@@ -18,9 +18,7 @@ import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashMap;

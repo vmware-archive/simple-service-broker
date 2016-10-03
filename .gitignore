@@ -4,6 +4,6 @@ target
 *.rdb
 /release/
 /product/
-/resources/*.jar
+resources
 tile-history*.*
 /env/
