@@ -1,60 +1,40 @@
 package io.pivotal.cf.service.client;
 
-import feign.FeignException;
+import io.pivotal.cf.service.connector.HelloRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {Application.class})
+@RunWith(SpringRunner.class)
+@WebMvcTest(HelloClientController.class)
 public class HelloClientControllerTest {
 
     private static final String USER = "foo" + System.currentTimeMillis();
     private static final String PW = "bar";
 
     @Autowired
-    private HelloClientController helloClientController;
+    private MockMvc mvc;
+
+    @MockBean
+    private HelloRepository helloRepository;
+
 
     @Test
-    public void testIt() {
-        try {
-            helloClientController.greeting(USER);
-        } catch (Exception e) {
-            //expected
-            assertTrue(e instanceof FeignException);
-            assertEquals(401, ((FeignException) e).status());
-        }
+    public void testssss() throws Exception {
+        given(this.helloRepository.greeting(USER))
+                .willReturn("Hello, " + USER + "!");
 
-        String in = null;
-
-        try {
-            in = helloClientController.login(USER, PW);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-
-        assertNotNull(in);
-        assertEquals("user: " + USER + " logged in.", in);
-
-        String greeting = helloClientController.greeting(USER);
-        assertNotNull(greeting);
-        assertEquals("Hello, " + USER + "!", greeting);
-
-        String out = helloClientController.logout(USER);
-        assertNotNull(out);
-        assertEquals("user: " + USER + " logged out.", out);
-
-        try {
-            helloClientController.greeting(USER);
-        } catch (Exception e) {
-            //expected
-            assertTrue(e instanceof FeignException);
-            assertEquals(401, ((FeignException) e).status());
-        }
+        this.mvc.perform(get("/greeting?username=" + USER))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello, " + USER + "!"));
     }
 }

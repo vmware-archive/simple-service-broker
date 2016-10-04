@@ -3,21 +3,20 @@ package io.pivotal.cf.service;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {Application.class})
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class HelloControllerTest {
 
     private static final String USER = "foo";
     private static final String PW = "bar";
-
 
     @Autowired
     private HelloController helloController;
@@ -29,17 +28,21 @@ public class HelloControllerTest {
         assertEquals("Sorry, I don't think we've met.", greeting.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, greeting.getStatusCode());
 
-        ResponseEntity<Void> in = helloController.login(USER, PW);
+        ResponseEntity<User> in = helloController.createUser(new User(USER, PW));
 
         assertNotNull(in);
         assertEquals(HttpStatus.CREATED, in.getStatusCode());
+        User u = in.getBody();
+        assertNotNull(u);
+        assertEquals(USER, u.getName());
+        assertEquals(PW, u.getPassword());
 
         greeting = helloController.greeting(USER);
         assertNotNull(greeting);
         assertEquals("Hello, foo!", greeting.getBody());
         assertEquals(HttpStatus.OK, greeting.getStatusCode());
 
-        ResponseEntity<Void> out = helloController.logout(USER);
+        ResponseEntity<Void> out = helloController.deleteUser(USER);
         assertNotNull(out);
         assertEquals(HttpStatus.OK, out.getStatusCode());
 

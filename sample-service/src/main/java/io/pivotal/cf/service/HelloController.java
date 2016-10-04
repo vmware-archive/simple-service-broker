@@ -3,10 +3,7 @@ package io.pivotal.cf.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 class HelloController {
@@ -14,14 +11,14 @@ class HelloController {
     @Autowired
     private UserStore userStore;
 
-    @RequestMapping(value = "/login", method = RequestMethod.GET)
-    ResponseEntity<Void> login(@RequestParam(value = "username") String username, @RequestParam(value = "password") String password) {
-        userStore.addUser(username, password);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    @RequestMapping(value = "/users", method = RequestMethod.POST)
+    ResponseEntity<User> createUser(@RequestBody User user) {
+        userStore.addUser(user);
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    @RequestMapping(value = "/logout", method = RequestMethod.GET)
-    ResponseEntity<Void> logout(@RequestParam(value = "username") String username) {
+    @RequestMapping(value = "/users/{username}", method = RequestMethod.DELETE)
+    ResponseEntity<Void> deleteUser(@PathVariable(value = "username") String username) {
         userStore.deleteUser(username);
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -1,6 +1,5 @@
 package io.pivotal.cf.service;
 
-
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -10,32 +9,36 @@ import java.util.Map;
 @Service
 class UserStore {
 
-    private static final Map<String, String> users = new HashMap<>();
+    private static final Map<String, User> users = new HashMap<>();
 
-    void addUser(@NonNull String userId, @NonNull String password) {
-        if (userExists(userId)) {
-            throw new HelloException("user: " + userId + " already exists.");
+    void addUser(@NonNull User user) {
+        if (userExists(user.getName())) {
+            throw new HelloException("user: " + user + " already exists.");
         }
-        users.put(userId, password);
+        users.put(user.getName(), user);
     }
 
-    void deleteUser(@NonNull String userId) {
-        if (!userExists(userId)) {
-            throw new HelloException("user: " + userId + " does not exist.");
+    void deleteUser(@NonNull String userName) {
+        if (!userExists(userName)) {
+            throw new HelloException("user: " + userName + " does not exist.");
         }
-        users.remove(userId);
+        users.remove(userName);
     }
 
-    boolean userExists(@NonNull String userId) {
-        return users.containsKey(userId);
+    User getUser(@NonNull String userName) {
+        return users.get(userName);
     }
 
-    public boolean validateUser(@NonNull String userId, @NonNull String password) {
-        if (!userExists(userId)) {
+    boolean userExists(@NonNull String userName) {
+        return getUser(userName) != null;
+    }
+
+    public boolean validateUser(@NonNull User user) {
+        if (!userExists(user.getName())) {
             return false;
         }
 
-        if (users.get(userId).equals(password)) {
+        if (users.get(user).getPassword().equals(user.getPassword())) {
             return true;
         }
 

@@ -1,6 +1,7 @@
 package io.pivotal.cf.service.connector;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -15,6 +16,11 @@ class TestConfig {
 
     @Autowired
     private Environment env;
+
+    @Bean
+    public TestRestTemplate testRestTemplate() {
+        return new TestRestTemplate();
+    }
 
     @Bean
     public HelloServiceInfo helloServiceInfo() {
