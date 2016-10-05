@@ -2,7 +2,6 @@ package io.pivotal.cf.servicebroker;
 
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.BrokerApiVersion;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,11 +14,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Profile("cloud")
 public class Config {
 
-    @Autowired
-    private Environment env;
-
     @Bean
-    public BrokerApiVersion brokerApiVersion() {
+    public BrokerApiVersion brokerApiVersion(Environment env) {
         return new BrokerApiVersion(env.getProperty("API_VERSION"));
     }
 
@@ -31,7 +27,6 @@ public class Config {
     }
 
     @Bean
-    @Autowired
     RedisTemplate<String, ServiceInstance> instanceTemplate(JedisConnectionFactory jedisConnectionFactory) {
         RedisTemplate<String, ServiceInstance> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory);
@@ -39,7 +34,6 @@ public class Config {
     }
 
     @Bean
-    @Autowired
     RedisTemplate<String, ServiceBinding> bindingTemplate(JedisConnectionFactory jedisConnectionFactory) {
         RedisTemplate<String, ServiceBinding> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory);

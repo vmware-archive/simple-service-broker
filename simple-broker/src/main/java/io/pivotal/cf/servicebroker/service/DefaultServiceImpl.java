@@ -37,7 +37,7 @@ public class DefaultServiceImpl implements BrokeredService {
     }
 
     @Override
-    public boolean isAsynch() {
+    public boolean isAsync() {
         return false;
     }
 }

@@ -5,9 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -23,9 +21,6 @@ public class HelloRepositoryTest {
 
     private static final String USER = "foo" + System.currentTimeMillis();
     private static final String PW = "bar";
-
-    @Autowired
-    private TestRestTemplate restTemplate;
 
     @MockBean
     private HelloRepository helloRepository;

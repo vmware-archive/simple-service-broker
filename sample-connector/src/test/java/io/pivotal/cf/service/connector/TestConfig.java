@@ -1,6 +1,5 @@
 package io.pivotal.cf.service.connector;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,16 +13,13 @@ import java.util.Map;
 @PropertySource("classpath:test.properties")
 class TestConfig {
 
-    @Autowired
-    private Environment env;
-
     @Bean
     public TestRestTemplate testRestTemplate() {
         return new TestRestTemplate();
     }
 
     @Bean
-    public HelloServiceInfo helloServiceInfo() {
+    public HelloServiceInfo helloServiceInfo(Environment env) {
         Map<String, Object> m = new HashMap<>();
         Map<String, Object> creds = new HashMap<>();
         creds.put("username", env.getProperty("username"));
@@ -36,7 +32,6 @@ class TestConfig {
     }
 
     @Bean
-    @Autowired
     public HelloRepository helloRepository(HelloServiceInfo helloServiceInfo) {
         HelloRepositoryFactory hrf = new HelloRepositoryFactory();
         return hrf.create(helloServiceInfo);

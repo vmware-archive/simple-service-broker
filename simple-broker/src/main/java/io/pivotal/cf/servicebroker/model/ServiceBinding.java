@@ -2,12 +2,14 @@ package io.pivotal.cf.servicebroker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Data;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 
 import java.io.Serializable;
 import java.util.Map;
 
+@Data
 public class ServiceBinding implements Serializable {
 
     public static final long serialVersionUID = 1L;
@@ -48,14 +50,6 @@ public class ServiceBinding implements Serializable {
         this.appGuid = request.getBoundAppGuid();
         this.bindResource = request.getBindResource();
         this.parameters = request.getParameters();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setCredentials(Map<String, Object> creds) {
-        this.credentials = creds;
     }
 
     public CreateServiceInstanceAppBindingResponse getCreateResponse() {

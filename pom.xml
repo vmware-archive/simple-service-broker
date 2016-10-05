@@ -14,6 +14,7 @@
         <module>sample-service</module>
         <module>sample-connector</module>
         <module>sample-client</module>
+        <module>sample-broker</module>
     </modules>
 
     <parent>
@@ -36,6 +37,12 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.16.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-feign</artifactId>
+                <version>1.1.0.RELEASE</version>
             </dependency>
 
         </dependencies>

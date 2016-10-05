@@ -2,31 +2,33 @@ package io.pivotal.cf.servicebroker.service;
 
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceDefinitionDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
+import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-
 @Service
 @Slf4j
-class InstanceService implements org.springframework.cloud.servicebroker.service.ServiceInstanceService {
+public class InstanceService implements ServiceInstanceService {
 
     private static final String OBJECT_ID = "Instance";
 
-    @Autowired
+    public InstanceService(CatalogService catalogService, BrokeredService brokeredService,
+                           HashOperations<String, String, ServiceInstance> instanceTemplate) {
+        this.catalogService = catalogService;
+        this.brokeredService = brokeredService;
+        this.instanceTemplate = instanceTemplate;
+    }
+
     private CatalogService catalogService;
 
-    @Autowired
     private BrokeredService brokeredService;
 
-    @Resource(name = "instanceTemplate")
-    private HashOperations<String, String, ServiceInstance> repository;
+    private HashOperations<String, String, ServiceInstance> instanceTemplate;
 
     ServiceInstance getServiceInstance(String id) {
         if (id == null || getInstance(id) == null) {
@@ -103,7 +105,7 @@ class InstanceService implements org.springframework.cloud.servicebroker.service
             throw new ServiceBrokerException("null serviceInstanceId");
         }
 
-        ServiceInstance si = repository.get(OBJECT_ID, id);
+        ServiceInstance si = instanceTemplate.get(OBJECT_ID, id);
 
         if (si == null) {
             throw new ServiceInstanceDoesNotExistException(id);
@@ -114,13 +116,13 @@ class InstanceService implements org.springframework.cloud.servicebroker.service
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
         log.info("deleting service instance from repo: " + instance.getId());
-        repository.delete(OBJECT_ID, instance.getId());
+        instanceTemplate.delete(OBJECT_ID, instance.getId());
         return instance;
     }
 
     private ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
         log.info("saving service instance to repo: " + instance.getId());
-        repository.put(OBJECT_ID, instance.getId(), instance);
+        instanceTemplate.put(OBJECT_ID, instance.getId(), instance);
         return instance;
     }
 }

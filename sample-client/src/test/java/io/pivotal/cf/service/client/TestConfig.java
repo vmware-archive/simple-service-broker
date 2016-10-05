@@ -17,11 +17,8 @@ import java.util.Map;
 @PropertySource("classpath:test.properties")
 class TestConfig {
 
-    @Autowired
-    private Environment env;
-
     @Bean
-    public HelloServiceInfo helloServiceInfo() {
+    public HelloServiceInfo helloServiceInfo(Environment env) {
         Map<String, Object> m = new HashMap<>();
         Map<String, Object> creds = new HashMap<>();
         creds.put("username", env.getProperty("username"));

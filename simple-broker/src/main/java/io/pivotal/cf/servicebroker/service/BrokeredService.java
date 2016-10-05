@@ -20,5 +20,5 @@ public interface BrokeredService {
 
     Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException;
 
-    boolean isAsynch();
+    boolean isAsync();
 }

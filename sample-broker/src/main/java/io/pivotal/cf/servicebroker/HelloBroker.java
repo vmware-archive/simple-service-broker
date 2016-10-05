@@ -1,10 +1,9 @@
-package io.pivotal.cf.servicebroker.broker;
+package io.pivotal.cf.servicebroker;
 
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.service.DefaultServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -23,14 +22,17 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class HelloService extends DefaultServiceImpl {
+public class HelloBroker extends DefaultServiceImpl {
 
-    @Autowired
+    public HelloBroker(HelloBrokerRepository helloRepository, Environment env) {
+        super();
+        this.helloRepository = helloRepository;
+        this.env = env;
+    }
+
     private Environment env;
 
-    private String greeting() {
-        return env.getProperty("GREETING");
-    }
+    private HelloBrokerRepository helloRepository;
 
     /**
      * Add code here and it will be run during the create-service process. This might include
@@ -42,7 +44,11 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public void createInstance(ServiceInstance instance) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am creating a service instance!");
+        //TODO use admin creds to talk to service
+        User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
+        instance.getParameters().put("user", user);
+
+        log.info("broker user: " + user.getName() + " created.");
     }
 
     /**
@@ -54,7 +60,13 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public void deleteInstance(ServiceInstance instance) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am deleting a service instance!");
+        //TODO use admin creds to talk to service
+
+        User user = (User) instance.getParameters().get("user");
+        helloRepository.deprovisionUser(user.getName());
+        instance.getParameters().remove("user");
+
+        log.info("broker user: " + user.getName() + " deleted.");
     }
 
     /**
@@ -67,7 +79,12 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public void updateInstance(ServiceInstance instance) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am updating a service instance!");
+        //TODO change user/pw for this instance, use admin creds to talk to service
+        User user = (User) instance.getParameters().get("user");
+        user = helloRepository.updateUser(user.getName(), user);
+        instance.getParameters().put("user", user);
+
+        log.info("broker user: " + user.getName() + " updated.");
     }
 
     /**
@@ -86,7 +103,11 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am creating a binding!");
+        //TODO use admin creds to talk to service
+        User user = helloRepository.provisionUser(new User(binding.getId(), null, User.Role.User));
+        instance.getParameters().put("user", user);
+
+        log.info("user: " + user.getName() + " created.");
     }
 
     /**
@@ -98,7 +119,13 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public void deleteBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am deleting a binding!");
+        //TODO use admin creds to talk to service
+
+        User user = (User) binding.getParameters().get("user");
+        helloRepository.deprovisionUser(user.getName());
+        binding.getParameters().remove("user");
+
+        log.info("user: " + user.getName() + " deleted.");
     }
 
     /**
@@ -107,7 +134,7 @@ public class HelloService extends DefaultServiceImpl {
      * <a href=https://docs.cloudfoundry.org/services/binding-credentials.html>here.</a>
      * <p>
      * This method is called after the create-binding method: any information stored in binding.properties in the createBinding call
-     * will be availble here, along with any custom data passed in as json parameters as part of the create-binding process by the client).
+     * will be availble here, along with any custom data passed in as json parameters as part of the create-binding process by the client.
      *
      * @param instance service instance data passed in by the cloud connector.
      * @param binding  binding data passed in by the cloud connector.
@@ -116,21 +143,24 @@ public class HelloService extends DefaultServiceImpl {
      */
     @Override
     public Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-        log.info(greeting() + "!, I am returning credentials!");
+
+        User user = (User) binding.getParameters().get("user");
+
         Map<String, Object> m = new HashMap<>();
-        m.put("host", "helloHost");
-        m.put("port", "helloPort");
-        m.put("username", "hello");
-        m.put("password", "world");
-        m.put("database", "helloDB");
-        m.put("uri", "http://" + m.get("username") + ":" + m.get("password") + "@" + m.get("host") + ":" + m.get("port") + "/" + m.get("database"));
+        m.put("hostname", env.getProperty("hostname"));
+        m.put("port", env.getProperty("port"));
+        m.put("username", user.getName());
+        m.put("password", user.getPassword());
+
+        String uri = "hello://" + m.get("username") + ":" + m.get("password") + "@" + m.get("hostname") + ":" + m.get("port");
+        m.put("uri", uri);
 
         return m;
     }
 
     @Override
-    //TODO deal with async
-    public boolean isAsynch() {
+    public boolean isAsync() {
+        //TODO deal with async
         return false;
     }
 }

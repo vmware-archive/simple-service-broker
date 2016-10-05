@@ -2,12 +2,13 @@ package io.pivotal.cf.servicebroker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Data;
 import org.springframework.cloud.servicebroker.model.*;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
+@Data
 public class ServiceInstance implements Serializable {
 
     public static final long serialVersionUID = 1L;
@@ -34,7 +35,7 @@ public class ServiceInstance implements Serializable {
 
     @JsonSerialize
     @JsonProperty("parameters")
-    private final Map<String, Object> parameters = new HashMap<>();
+    private Map<String, Object> parameters;
 
     @JsonSerialize
     @JsonProperty("accepts_incomplete")
@@ -45,56 +46,25 @@ public class ServiceInstance implements Serializable {
         super();
         this.id = request.getServiceInstanceId();
         this.organizationGuid = request.getOrganizationGuid();
-        setPlanId(request.getPlanId());
-        setServiceId(request.getServiceDefinitionId());
+        this.planId = request.getPlanId();
+        this.serviceId = request.getServiceDefinitionId();
         this.spaceGuid = request.getSpaceGuid();
-        setParameters(request.getParameters());
+        this.parameters = request.getParameters();
     }
 
     public ServiceInstance(UpdateServiceInstanceRequest request) {
         super();
         this.id = request.getServiceInstanceId();
-        setPlanId(request.getPlanId());
-        setServiceId(request.getServiceDefinitionId());
-        setParameters(request.getParameters());
-    }
-
-    public void setParameters(Map<String, Object> m) {
-        if (m != null) {
-            getParameters().clear();
-            getParameters().putAll(m);
-        }
-    }
-
-    public Map<String, Object> getParameters() {
-        return this.parameters;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getServiceId() {
-        return this.serviceId;
-    }
-
-    public void setServiceId(String s) {
-        this.serviceId = s;
-    }
-
-    public String getPlanId() {
-        return this.planId;
-    }
-
-    public void setPlanId(String s) {
-        this.planId = s;
+        this.planId = request.getPlanId();
+        this.serviceId = request.getServiceDefinitionId();
+        this.parameters = request.getParameters();
     }
 
     public CreateServiceInstanceResponse getCreateResponse() {
         CreateServiceInstanceResponse resp = new CreateServiceInstanceResponse();
         resp.withAsync(this.acceptsIncomplete);
-        if (getParameters().containsKey("dashboard_url")) {
-            resp.withDashboardUrl(getParameters().get("dashboard_url").toString());
+        if (this.parameters.containsKey("dashboard_url")) {
+            resp.withDashboardUrl(this.parameters.get("dashboard_url").toString());
         }
         return resp;
     }

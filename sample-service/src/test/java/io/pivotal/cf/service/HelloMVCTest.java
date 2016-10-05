@@ -33,6 +33,7 @@ public class HelloMVCTest {
 
     private static final String USER = "foo";
     private static final String PW = "bar";
+    private static final User.UserType TYPE = User.UserType.User;
 
     private MockMvc mockMvc;
 
@@ -56,7 +57,7 @@ public class HelloMVCTest {
 
         RequestBuilder reqBuilder = MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(toJson(new User(USER, PW)));
+                .content(toJson(new User(USER, PW, TYPE)));
 
         MvcResult result = mockMvc.perform(reqBuilder)
                 .andExpect(MockMvcResultMatchers.status().isCreated())

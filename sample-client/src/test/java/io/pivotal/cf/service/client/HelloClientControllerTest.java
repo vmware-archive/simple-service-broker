@@ -18,8 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(HelloClientController.class)
 public class HelloClientControllerTest {
 
-    private static final String USER = "foo" + System.currentTimeMillis();
-    private static final String PW = "bar";
+    private static final String USER = "foo";
 
     @Autowired
     private MockMvc mvc;
@@ -29,7 +28,7 @@ public class HelloClientControllerTest {
 
 
     @Test
-    public void testssss() throws Exception {
+    public void testRepo() throws Exception {
         given(this.helloRepository.greeting(USER))
                 .willReturn("Hello, " + USER + "!");
 

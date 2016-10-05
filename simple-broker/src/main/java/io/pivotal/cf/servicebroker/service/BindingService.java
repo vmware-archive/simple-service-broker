@@ -3,7 +3,6 @@ package io.pivotal.cf.servicebroker.service;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
@@ -14,23 +13,25 @@ import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingSer
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Map;
 
 @Service
 @Slf4j
 public class BindingService implements ServiceInstanceBindingService {
 
-    public static final String OBJECT_ID = "binding";
+    private static final String OBJECT_ID = "binding";
 
-    @Autowired
+    public BindingService(InstanceService instanceService, BrokeredService brokeredService, HashOperations<String, String, ServiceBinding> bindingTemplate) {
+        this.instanceService = instanceService;
+        this.brokeredService = brokeredService;
+        this.bindingTemplate = bindingTemplate;
+    }
+
     private InstanceService instanceService;
 
-    @Autowired
     private BrokeredService brokeredService;
 
-    @Resource(name = "bindingTemplate")
-    private HashOperations<String, String, ServiceBinding> repository;
+    private HashOperations<String, String, ServiceBinding> bindingTemplate;
 
     @Override
     public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) throws ServiceBrokerException {
@@ -52,7 +53,7 @@ public class BindingService implements ServiceInstanceBindingService {
         binding.setCredentials(creds);
 
         log.info("saving binding: " + request.getBindingId());
-        repository.put(OBJECT_ID, request.getBindingId(), binding);
+        bindingTemplate.put(OBJECT_ID, request.getBindingId(), binding);
 
         return binding.getCreateResponse();
     }
@@ -77,7 +78,7 @@ public class BindingService implements ServiceInstanceBindingService {
         brokeredService.deleteBinding(si, binding);
 
         log.info("deleting binding for service instance: " + request.getBindingId() + " service instance: " + request.getServiceInstanceId());
-        repository.delete(OBJECT_ID, binding.getId());
+        bindingTemplate.delete(OBJECT_ID, binding.getId());
     }
 
     private ServiceBinding getBinding(String id) throws ServiceBrokerException {
@@ -85,7 +86,7 @@ public class BindingService implements ServiceInstanceBindingService {
             throw new ServiceBrokerException("null serviceBindingId");
         }
 
-        ServiceBinding sb = repository.get(OBJECT_ID, id);
+        ServiceBinding sb = bindingTemplate.get(OBJECT_ID, id);
 
         if (sb == null) {
             throw new ServiceInstanceBindingDoesNotExistException(id);
