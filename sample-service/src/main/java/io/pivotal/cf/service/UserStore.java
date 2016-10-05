@@ -11,17 +11,11 @@ class UserStore {
 
     private static final Map<String, User> users = new HashMap<>();
 
-    void addUser(@NonNull User user) {
-        if (userExists(user.getName())) {
-            throw new HelloException("user: " + user + " already exists.");
-        }
+    void save(@NonNull User user) {
         users.put(user.getName(), user);
     }
 
-    void deleteUser(@NonNull String userName) {
-        if (!userExists(userName)) {
-            throw new HelloException("user: " + userName + " does not exist.");
-        }
+    void delete(@NonNull String userName) {
         users.remove(userName);
     }
 

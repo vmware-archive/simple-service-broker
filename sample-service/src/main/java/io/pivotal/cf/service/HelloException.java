@@ -1,6 +1,6 @@
 package io.pivotal.cf.service;
 
-class HelloException extends RuntimeException {
+class HelloException extends Exception {
 
     HelloException(String s) {
         super(s);

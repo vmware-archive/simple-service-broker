@@ -3,6 +3,7 @@ package io.pivotal.cf.servicebroker;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
+import io.pivotal.cf.service.connector.User;
 import org.springframework.web.bind.annotation.RequestBody;
 
 interface HelloBrokerRepository {

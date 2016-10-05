@@ -1,5 +1,6 @@
 package io.pivotal.cf.servicebroker;
 
+import io.pivotal.cf.service.connector.User;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -46,12 +47,12 @@ class TestConfig {
 
     @Bean
     public User instanceUser() {
-        return new User(SI_ID, null, User.Role.Broker);
+        return new User(SI_ID, User.Role.Broker);
     }
 
     @Bean
     public User bindingUser() {
-        return new User(SB_ID, null, User.Role.User);
+        return new User(SB_ID, User.Role.User);
     }
 
     private Map<String, Object> getBindResources() {

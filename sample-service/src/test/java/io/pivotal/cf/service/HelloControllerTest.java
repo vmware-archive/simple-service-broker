@@ -17,7 +17,7 @@ public class HelloControllerTest {
 
     private static final String USER = "foo";
     private static final String PW = "bar";
-    private static final User.UserType TYPE = User.UserType.User;
+    private static final User.Role ROLE = User.Role.User;
 
     @Autowired
     private HelloController helloController;
@@ -29,14 +29,14 @@ public class HelloControllerTest {
         assertEquals("Sorry, I don't think we've met.", greeting.getBody());
         assertEquals(HttpStatus.UNAUTHORIZED, greeting.getStatusCode());
 
-        ResponseEntity<User> in = helloController.createUser(new User(USER, PW, TYPE));
+        ResponseEntity<User> in = helloController.createUser(new User(USER, ROLE));
 
         assertNotNull(in);
         assertEquals(HttpStatus.CREATED, in.getStatusCode());
         User u = in.getBody();
         assertNotNull(u);
         assertEquals(USER, u.getName());
-        assertEquals(PW, u.getPassword());
+        assertNotNull(u.getPassword());
 
         greeting = helloController.greeting(USER);
         assertNotNull(greeting);

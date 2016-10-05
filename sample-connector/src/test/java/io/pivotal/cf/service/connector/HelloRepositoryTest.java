@@ -19,8 +19,9 @@ import static org.mockito.Mockito.doAnswer;
 @ContextConfiguration(classes = TestConfig.class, loader = AnnotationConfigContextLoader.class)
 public class HelloRepositoryTest {
 
-    private static final String USER = "foo" + System.currentTimeMillis();
-    private static final String PW = "bar";
+    private static final String NAME = "foo" + System.currentTimeMillis();
+
+    private static final User USER = new User(NAME, User.Role.User);
 
     @MockBean
     private HelloRepository helloRepository;
@@ -34,18 +35,18 @@ public class HelloRepositoryTest {
             }
         };
 
-        doAnswer(a).when(helloRepository).createUser(USER, PW);
+        doAnswer(a).when(helloRepository).createUser(USER);
 
-        given(this.helloRepository.greeting(USER)).willReturn("Hello, " + USER + "!");
+        given(this.helloRepository.greeting(NAME)).willReturn("Hello, " + USER.getName() + "!");
     }
 
     @Test
     public void testIt() {
-        helloRepository.createUser(USER, PW);
-        String greeting = helloRepository.greeting(USER);
+        helloRepository.createUser(USER);
+        String greeting = helloRepository.greeting(USER.getName());
         assertNotNull(greeting);
-        assertEquals("Hello, " + USER + "!", greeting);
+        assertEquals("Hello, " + USER.getName() + "!", greeting);
 
-        helloRepository.deleteUser(USER);
+        helloRepository.deleteUser(USER.getName());
     }
 }

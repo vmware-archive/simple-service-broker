@@ -33,7 +33,7 @@ public class HelloMVCTest {
 
     private static final String USER = "foo";
     private static final String PW = "bar";
-    private static final User.UserType TYPE = User.UserType.User;
+    private static final User.Role ROLE = User.Role.User;
 
     private MockMvc mockMvc;
 
@@ -57,7 +57,7 @@ public class HelloMVCTest {
 
         RequestBuilder reqBuilder = MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(toJson(new User(USER, PW, TYPE)));
+                .content(toJson(new User(USER, PW, ROLE)));
 
         MvcResult result = mockMvc.perform(reqBuilder)
                 .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -70,6 +70,12 @@ public class HelloMVCTest {
 
         mockMvc.perform(delete("/users/foo"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testUser() throws IOException {
+        User u = new User("hello", "pass", User.Role.Broker);
+        System.out.println(toJson(u));
     }
 
     private String toJson(Object o) throws IOException {

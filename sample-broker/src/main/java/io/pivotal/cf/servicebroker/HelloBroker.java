@@ -1,5 +1,6 @@
 package io.pivotal.cf.servicebroker;
 
+import io.pivotal.cf.service.connector.User;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.service.DefaultServiceImpl;
@@ -45,7 +46,7 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void createInstance(ServiceInstance instance) throws ServiceBrokerException {
         //TODO use admin creds to talk to service
-        User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
+        User user = helloRepository.provisionUser(new User(instance.getId(), User.Role.Broker));
         instance.getParameters().put("user", user);
 
         log.info("broker user: " + user.getName() + " created.");
@@ -104,7 +105,7 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
         //TODO use admin creds to talk to service
-        User user = helloRepository.provisionUser(new User(binding.getId(), null, User.Role.User));
+        User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
         instance.getParameters().put("user", user);
 
         log.info("user: " + user.getName() + " created.");
