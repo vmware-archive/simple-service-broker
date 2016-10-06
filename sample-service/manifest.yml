@@ -1,0 +1,9 @@
+---
+applications:
+- name: hello-service
+  memory: 256M
+  instances: 1
+  buildpack: java_buildpack_offline
+  path: target/sample-service-1.0.0.jar
+  env:
+    SPRING_PROFILES_ACTIVE: cloud
