@@ -3,8 +3,10 @@ package io.pivotal.cf.service;
 import lombok.Data;
 import lombok.NonNull;
 
+import java.io.Serializable;
+
 @Data
-public class User {
+public class User implements Serializable {
 
     public enum Role {Broker, User};
 

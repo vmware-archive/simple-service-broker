@@ -8,6 +8,7 @@ import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,13 +32,13 @@ public class TestConfig {
 
     @Bean
     public InstanceService instanceService(CatalogService catalogService, BrokeredService brokeredService,
-                                           HashOperations<String, String, ServiceInstance> instanceTemplate) {
+                                           RedisTemplate<String, ServiceInstance> instanceTemplate) {
         return new InstanceService(catalogService, brokeredService, instanceTemplate);
     }
 
     @Bean
     public BindingService bindingService(InstanceService instanceService, BrokeredService brokeredService,
-                                         HashOperations<String, String, ServiceBinding> bindingTemplate) {
+                                         RedisTemplate<String, ServiceBinding> bindingTemplate) {
         return new BindingService(instanceService, brokeredService, bindingTemplate);
     }
 
@@ -47,10 +48,13 @@ public class TestConfig {
     }
 
     @MockBean
-    HashOperations<String, String, ServiceBinding> bindingTemplate;
+    private RedisTemplate<String, ServiceInstance> instanceTemplate;
 
     @MockBean
-    private HashOperations<String, String, ServiceInstance> instanceTemplate;
+    private RedisTemplate<String, ServiceBinding> bindingTemplate;
+
+    @MockBean
+    private HashOperations<String, Object, Object> hashOperations;
 
     @Bean
     public CreateServiceInstanceRequest createServiceInstanceRequest() {

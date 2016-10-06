@@ -10,7 +10,7 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindin
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -21,7 +21,7 @@ public class BindingService implements ServiceInstanceBindingService {
 
     private static final String OBJECT_ID = "binding";
 
-    public BindingService(InstanceService instanceService, BrokeredService brokeredService, HashOperations<String, String, ServiceBinding> bindingTemplate) {
+    public BindingService(InstanceService instanceService, BrokeredService brokeredService, RedisTemplate<String, ServiceBinding> bindingTemplate) {
         this.instanceService = instanceService;
         this.brokeredService = brokeredService;
         this.bindingTemplate = bindingTemplate;
@@ -31,7 +31,7 @@ public class BindingService implements ServiceInstanceBindingService {
 
     private BrokeredService brokeredService;
 
-    private HashOperations<String, String, ServiceBinding> bindingTemplate;
+    private RedisTemplate<String, ServiceBinding> bindingTemplate;
 
     @Override
     public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) throws ServiceBrokerException {
@@ -50,10 +50,10 @@ public class BindingService implements ServiceInstanceBindingService {
 
         brokeredService.createBinding(instance, binding);
         Map<String, Object> creds = brokeredService.getCredentials(instance, binding);
-        binding.setCredentials(creds);
+        binding.getCredentials().putAll(creds);
 
         log.info("saving binding: " + request.getBindingId());
-        bindingTemplate.put(OBJECT_ID, request.getBindingId(), binding);
+        bindingTemplate.opsForHash().put(OBJECT_ID, request.getBindingId(), binding);
 
         return binding.getCreateResponse();
     }
@@ -78,7 +78,7 @@ public class BindingService implements ServiceInstanceBindingService {
         brokeredService.deleteBinding(si, binding);
 
         log.info("deleting binding for service instance: " + request.getBindingId() + " service instance: " + request.getServiceInstanceId());
-        bindingTemplate.delete(OBJECT_ID, binding.getId());
+        bindingTemplate.opsForHash().delete(OBJECT_ID, binding.getId());
     }
 
     private ServiceBinding getBinding(String id) throws ServiceBrokerException {
@@ -86,7 +86,7 @@ public class BindingService implements ServiceInstanceBindingService {
             throw new ServiceBrokerException("null serviceBindingId");
         }
 
-        ServiceBinding sb = bindingTemplate.get(OBJECT_ID, id);
+        ServiceBinding sb = (ServiceBinding) bindingTemplate.opsForHash().get(OBJECT_ID, id);
 
         if (sb == null) {
             throw new ServiceInstanceBindingDoesNotExistException(id);

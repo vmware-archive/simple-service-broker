@@ -3,10 +3,12 @@ package io.pivotal.cf.servicebroker.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
+import lombok.NonNull;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -32,15 +34,15 @@ public class ServiceBinding implements Serializable {
 
     @JsonSerialize
     @JsonProperty("bind_resource")
-    private final Map<String, Object> bindResource;
+    private final Map<String, Object> bindResource = new HashMap<>();
 
     @JsonSerialize
     @JsonProperty("parameters")
-    private final Map<String, Object> parameters;
+    private final Map<String, Object> parameters = new HashMap<>();
 
     @JsonSerialize
     @JsonProperty("credentials")
-    private Map<String, Object> credentials;
+    private final Map<String, Object> credentials = new HashMap<>();
 
     //TODO deal with stuff in response bodies
     public ServiceBinding(CreateServiceInstanceBindingRequest request) {
@@ -48,8 +50,18 @@ public class ServiceBinding implements Serializable {
         this.serviceId = request.getServiceDefinitionId();
         this.planId = request.getPlanId();
         this.appGuid = request.getBoundAppGuid();
-        this.bindResource = request.getBindResource();
-        this.parameters = request.getParameters();
+
+        if (request.getBindResource() != null) {
+            bindResource.putAll(request.getBindResource());
+        }
+
+        if (request.getParameters() != null) {
+            this.parameters.putAll(request.getParameters());
+        }
+    }
+
+    public Object getParameter(@NonNull String key) {
+        return this.parameters.get(key);
     }
 
     public CreateServiceInstanceAppBindingResponse getCreateResponse() {

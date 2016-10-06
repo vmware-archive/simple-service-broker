@@ -15,6 +15,7 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBin
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -50,20 +51,25 @@ public class BindingServiceTest {
     private final Map<String, ServiceBinding> fakeRepo = new HashMap<>();
 
     @Autowired
-    private HashOperations<String, String, ServiceBinding> bindingRepo;
+    private RedisTemplate<String, ServiceBinding> bindingTemplate;
+
+    @Autowired
+    private HashOperations<String, Object, Object> hashOperations;
 
     @MockBean
     private InstanceService instanceService;
 
     @Test
     public void testBinding() throws ServiceBrokerException {
+        given(bindingTemplate.opsForHash()).willReturn(hashOperations);
+
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 fakeRepo.put(serviceBinding.getId(), serviceBinding);
                 return null;
             }
-        }).when(bindingRepo).put(anyString(), anyString(), any(ServiceBinding.class));
+        }).when(hashOperations).put(anyString(), anyString(), any(ServiceBinding.class));
 
         given(instanceService.getServiceInstance(TestConfig.SI_ID))
                 .willReturn(serviceInstance);
@@ -73,7 +79,7 @@ public class BindingServiceTest {
         assertNotNull(cresp);
         assertNotNull(cresp.getCredentials());
 
-        when(bindingRepo.get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get(TestConfig.SB_ID));
+        when(hashOperations.get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get(TestConfig.SB_ID));
 
         bindingService.deleteServiceInstanceBinding(deleteBindingRequest);
     }

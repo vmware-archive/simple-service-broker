@@ -13,6 +13,7 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceReques
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceRequest;
 import org.springframework.cloud.servicebroker.model.UpdateServiceInstanceRequest;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -20,8 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -45,23 +45,28 @@ public class InstanceServiceTest {
     private DeleteServiceInstanceRequest deleteServiceInstanceRequest;
 
     @Autowired
-    private HashOperations<String, String, ServiceInstance> serviceRepo;
+    private HashOperations<String, Object, Object> hashOperations;
+
+    @Autowired
+    private RedisTemplate<String, ServiceInstance> instanceTemplate;
 
     private final Map<String, ServiceInstance> fakeRepo = new HashMap<>();
 
     @Test
     public void testInstance() throws ServiceBrokerException {
+        given(instanceTemplate.opsForHash()).willReturn(hashOperations);
+
         doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
                 fakeRepo.put(serviceInstance.getId(), serviceInstance);
                 return null;
             }
-        }).when(serviceRepo).put(anyString(), anyString(), any(ServiceInstance.class));
+        }).when(hashOperations).put(InstanceService.OBJECT_ID, serviceInstance.getId(), serviceInstance);
 
         assertNotNull(instanceService.createServiceInstance(createServiceInstanceRequest));
 
-        when(serviceRepo.get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get(TestConfig.SI_ID));
+        when(instanceTemplate.opsForHash().get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get(TestConfig.SI_ID));
 
         assertNotNull(instanceService.updateServiceInstance(updateServiceInstanceRequest));
         assertNotNull(instanceService.deleteServiceInstance(deleteServiceInstanceRequest));

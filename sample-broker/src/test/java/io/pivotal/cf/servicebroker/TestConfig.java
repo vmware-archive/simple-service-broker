@@ -9,6 +9,7 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceReques
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +29,10 @@ class TestConfig {
     static final String PASSWORD = "password";
 
     @MockBean
-    private HashOperations<String, String, ServiceInstance> instanceTemplate;
+    private RedisTemplate<String, ServiceInstance> instanceTemplate;
 
     @MockBean
-    HashOperations<String, String, ServiceBinding> bindingTemplate;
+    private RedisTemplate<String, ServiceBinding> bindingTemplate;
 
     @Bean
     public CreateServiceInstanceRequest createServiceInstanceRequest() {

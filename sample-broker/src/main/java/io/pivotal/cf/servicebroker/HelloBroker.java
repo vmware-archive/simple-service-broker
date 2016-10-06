@@ -45,11 +45,18 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public void createInstance(ServiceInstance instance) throws ServiceBrokerException {
-        //TODO use admin creds to talk to service
-        User user = helloRepository.provisionUser(new User(instance.getId(), User.Role.Broker));
-        instance.getParameters().put("user", user);
 
-        log.info("broker user: " + user.getName() + " created.");
+        //TODO use admin creds to talk to service
+        log.info("provisioning broker user: " + instance.getId());
+
+        try {
+            User user = helloRepository.provisionUser(new User(instance.getId(), User.Role.Broker));
+            instance.addParameter("user", user);
+            log.info("broker user: " + user.getName() + " created.");
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     /**
@@ -62,12 +69,18 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void deleteInstance(ServiceInstance instance) throws ServiceBrokerException {
         //TODO use admin creds to talk to service
+        log.info("deprovisioning broker user: " + instance.getId());
 
-        User user = (User) instance.getParameters().get("user");
-        helloRepository.deprovisionUser(user.getName());
-        instance.getParameters().remove("user");
+        try {
+            User user = (User) instance.getParameter("user");
+            helloRepository.deprovisionUser(user.getName());
+            instance.getParameters().remove("user");
 
-        log.info("broker user: " + user.getName() + " deleted.");
+            log.info("broker user: " + user.getName() + " deleted.");
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     /**
@@ -81,11 +94,18 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void updateInstance(ServiceInstance instance) throws ServiceBrokerException {
         //TODO change user/pw for this instance, use admin creds to talk to service
-        User user = (User) instance.getParameters().get("user");
-        user = helloRepository.updateUser(user.getName(), user);
-        instance.getParameters().put("user", user);
+        log.info("updating broker user: " + instance.getId());
 
-        log.info("broker user: " + user.getName() + " updated.");
+        try {
+            User user = (User) instance.getParameter("user");
+            user = helloRepository.updateUser(user.getName(), user);
+            instance.getParameters().put("user", user);
+
+            log.info("broker user: " + user.getName() + " updated.");
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     /**
@@ -105,10 +125,17 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
         //TODO use admin creds to talk to service
-        User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
-        instance.getParameters().put("user", user);
+        log.info("provisioning user: " + binding.getId());
 
-        log.info("user: " + user.getName() + " created.");
+        try {
+            User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
+            instance.getParameters().put("user", user);
+
+            log.info("user: " + user.getName() + " created.");
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     /**
@@ -121,12 +148,18 @@ public class HelloBroker extends DefaultServiceImpl {
     @Override
     public void deleteBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
         //TODO use admin creds to talk to service
+        log.info("deprovisioning user: " + binding.getId());
 
-        User user = (User) binding.getParameters().get("user");
-        helloRepository.deprovisionUser(user.getName());
-        binding.getParameters().remove("user");
+        try {
+            User user = (User) binding.getParameter("user");
+            helloRepository.deprovisionUser(user.getName());
+            binding.getParameters().remove("user");
 
-        log.info("user: " + user.getName() + " deleted.");
+            log.info("user: " + user.getName() + " deleted.");
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     /**
@@ -143,20 +176,27 @@ public class HelloBroker extends DefaultServiceImpl {
      * @throws ServiceBrokerException thrown this for any errors during credential creation.
      */
     @Override
-    public Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
+    public Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws
+            ServiceBrokerException {
+        log.info("returning creds.");
 
-        User user = (User) binding.getParameters().get("user");
+        try {
+            User user = (User) binding.getParameters().get("user");
 
-        Map<String, Object> m = new HashMap<>();
-        m.put("hostname", env.getProperty("hostname"));
-        m.put("port", env.getProperty("port"));
-        m.put("username", user.getName());
-        m.put("password", user.getPassword());
+            Map<String, Object> m = new HashMap<>();
+            m.put("hostname", env.getProperty("hostname"));
+            m.put("port", env.getProperty("port"));
+            m.put("username", user.getName());
+            m.put("password", user.getPassword());
 
-        String uri = "hello://" + m.get("username") + ":" + m.get("password") + "@" + m.get("hostname") + ":" + m.get("port");
-        m.put("uri", uri);
+            String uri = "hello://" + m.get("username") + ":" + m.get("password") + "@" + m.get("hostname") + ":" + m.get("port");
+            m.put("uri", uri);
 
-        return m;
+            return m;
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
+            throw new ServiceBrokerException(t);
+        }
     }
 
     @Override

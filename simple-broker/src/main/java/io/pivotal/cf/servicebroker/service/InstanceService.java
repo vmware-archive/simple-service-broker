@@ -8,17 +8,16 @@ import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotE
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class InstanceService implements ServiceInstanceService {
 
-    private static final String OBJECT_ID = "Instance";
+    public static final String OBJECT_ID = "Instance";
 
-    public InstanceService(CatalogService catalogService, BrokeredService brokeredService,
-                           HashOperations<String, String, ServiceInstance> instanceTemplate) {
+    public InstanceService(CatalogService catalogService, BrokeredService brokeredService, RedisTemplate<String, ServiceInstance> instanceTemplate) {
         this.catalogService = catalogService;
         this.brokeredService = brokeredService;
         this.instanceTemplate = instanceTemplate;
@@ -28,7 +27,7 @@ public class InstanceService implements ServiceInstanceService {
 
     private BrokeredService brokeredService;
 
-    private HashOperations<String, String, ServiceInstance> instanceTemplate;
+    private RedisTemplate<String, ServiceInstance> instanceTemplate;
 
     ServiceInstance getServiceInstance(String id) {
         if (id == null || getInstance(id) == null) {
@@ -91,7 +90,7 @@ public class InstanceService implements ServiceInstanceService {
 
         originalInstance.setServiceId(updatedInstance.getServiceId());
         originalInstance.setPlanId(updatedInstance.getPlanId());
-        originalInstance.setParameters(updatedInstance.getParameters());
+        originalInstance.getParameters().putAll(updatedInstance.getParameters());
 
         brokeredService.updateInstance(originalInstance);
         saveInstance(originalInstance);
@@ -105,7 +104,7 @@ public class InstanceService implements ServiceInstanceService {
             throw new ServiceBrokerException("null serviceInstanceId");
         }
 
-        ServiceInstance si = instanceTemplate.get(OBJECT_ID, id);
+        ServiceInstance si = (ServiceInstance) instanceTemplate.opsForHash().get(OBJECT_ID, id);
 
         if (si == null) {
             throw new ServiceInstanceDoesNotExistException(id);
@@ -116,13 +115,13 @@ public class InstanceService implements ServiceInstanceService {
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
         log.info("deleting service instance from repo: " + instance.getId());
-        instanceTemplate.delete(OBJECT_ID, instance.getId());
+        instanceTemplate.opsForHash().delete(OBJECT_ID, instance.getId());
         return instance;
     }
 
     private ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
         log.info("saving service instance to repo: " + instance.getId());
-        instanceTemplate.put(OBJECT_ID, instance.getId(), instance);
+        instanceTemplate.opsForHash().put(OBJECT_ID, instance.getId(), instance);
         return instance;
     }
 }
