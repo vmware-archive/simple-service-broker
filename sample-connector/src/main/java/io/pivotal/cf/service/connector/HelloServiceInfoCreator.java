@@ -19,7 +19,7 @@ public class HelloServiceInfoCreator extends CloudFoundryServiceInfoCreator<Hell
 
         Map<String, Object> credentials = getCredentials(serviceData);
         String id = getId(serviceData);
-        String host = credentials.get("host").toString();
+        String host = credentials.get("hostname").toString();
         String port = credentials.get("port").toString();
         String adminId = credentials.get("username").toString();
         String adminPw = credentials.get("password").toString();

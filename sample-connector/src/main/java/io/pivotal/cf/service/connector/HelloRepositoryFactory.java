@@ -10,6 +10,7 @@ public class HelloRepositoryFactory {
         log.info("creating helloRepository with info: " + info);
 
         return Feign.builder()
+                .errorDecoder(new HelloErrorDecoder())
                 .target(HelloRepository.class, info.getUri());
     }
 }

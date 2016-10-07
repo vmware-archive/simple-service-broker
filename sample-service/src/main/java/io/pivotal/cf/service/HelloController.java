@@ -54,7 +54,7 @@ class HelloController {
         String response = "Sorry, I don't think we've met.";
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         if (userStore.userExists(username)) {
-            response = "Hello, " + username + "!";
+            response = "Hello, " + username + " !";
             status = HttpStatus.OK;
         }
         return new ResponseEntity<>(response, status);

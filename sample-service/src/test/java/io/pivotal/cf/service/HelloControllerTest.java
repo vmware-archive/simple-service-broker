@@ -16,7 +16,6 @@ import static org.junit.Assert.assertNotNull;
 public class HelloControllerTest {
 
     private static final String USER = "foo";
-    private static final String PW = "bar";
     private static final User.Role ROLE = User.Role.User;
 
     @Autowired
@@ -40,7 +39,7 @@ public class HelloControllerTest {
 
         greeting = helloController.greeting(USER);
         assertNotNull(greeting);
-        assertEquals("Hello, foo!", greeting.getBody());
+        assertEquals("Hello, foo !", greeting.getBody());
         assertEquals(HttpStatus.OK, greeting.getStatusCode());
 
         ResponseEntity<Void> out = helloController.deleteUser(USER);

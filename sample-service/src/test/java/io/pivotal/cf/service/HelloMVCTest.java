@@ -51,10 +51,6 @@ public class HelloMVCTest {
 
     @Test
     public void testIt() throws Exception {
-        mockMvc.perform(get("/greeting?username=foo"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(contentType));
-
         RequestBuilder reqBuilder = MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(toJson(new User(USER, PW, ROLE)));
@@ -83,4 +79,3 @@ public class HelloMVCTest {
         return mapper.writeValueAsString(o);
     }
 }
-

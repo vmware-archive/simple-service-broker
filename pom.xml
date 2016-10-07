@@ -12,9 +12,9 @@
     <modules>
         <module>simple-broker</module>
         <module>sample-service</module>
+        <module>sample-broker</module>
         <module>sample-connector</module>
         <module>sample-client</module>
-        <module>sample-broker</module>
     </modules>
 
     <parent>
