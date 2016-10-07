@@ -76,7 +76,7 @@ public class HelloBrokerTest {
 
         helloBroker.createBinding(serviceInstance, serviceBinding);
 
-        User user = (User) serviceInstance.getParameters().get("user");
+        User user = (User) serviceBinding.getParameters().get("user");
         assertNotNull(user);
         assertEquals(TestConfig.SB_ID, user.getName());
         assertEquals(User.Role.User, user.getRole());
@@ -98,11 +98,11 @@ public class HelloBrokerTest {
 
         Map<String, Object> m = helloBroker.getCredentials(serviceInstance, serviceBinding);
         assertNotNull(m);
-        assertEquals("localhpst", m.get("hostname"));
+        assertEquals("localhost", m.get("hostname"));
         assertEquals("8080", m.get("port"));
         assertEquals(TestConfig.SB_ID, m.get("username"));
         assertEquals(TestConfig.PASSWORD, m.get("password"));
-        assertEquals("hello://sbId:password@localhpst:8080", m.get("uri"));
+        assertEquals("hello://sbId:password@localhost:8080", m.get("uri"));
     }
 
     @Test

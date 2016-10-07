@@ -9,5 +9,5 @@ applications:
   env:
     SPRING_PROFILES_ACTIVE: cloud
     API_VERSION: 2.9
-    HELLO_HOST: sample.service.host
+    HELLO_HOST: sample.broker.domain
     HELLO_PORT: 80

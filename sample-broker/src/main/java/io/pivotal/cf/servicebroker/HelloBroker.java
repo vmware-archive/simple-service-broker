@@ -129,7 +129,7 @@ public class HelloBroker extends DefaultServiceImpl {
 
         try {
             User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
-            instance.getParameters().put("user", user);
+            binding.getParameters().put("user", user);
 
             log.info("user: " + user.getName() + " created.");
         } catch (Throwable t) {
@@ -184,8 +184,8 @@ public class HelloBroker extends DefaultServiceImpl {
             User user = (User) binding.getParameters().get("user");
 
             Map<String, Object> m = new HashMap<>();
-            m.put("hostname", env.getProperty("hostname"));
-            m.put("port", env.getProperty("port"));
+            m.put("hostname", env.getProperty("HELLO_HOST"));
+            m.put("port", env.getProperty("HELLO_PORT"));
             m.put("username", user.getName());
             m.put("password", user.getPassword());
 

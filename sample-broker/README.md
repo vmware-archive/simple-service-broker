@@ -36,7 +36,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
 8. Register the broker:
   
   ```bash
-  cf create-service-broker <your broker name> user <the password from application.properties> https://<uri of your broker app>
+  cf create-service-broker your_broker_name user the_password_from_application_properties https://uri.of.your.broker.app
   ```
 9. See your new broker:
   
@@ -78,7 +78,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf logs hello-broker --recent
   ...
-  2016-09-22T10:10:11.53-0400 [APP/0]      OUT 2016-09-22 14:10:11 [http-nio-8080-exec-10] INFO  i.p.c.s.hello.HelloService - hello!, I am creating a service instance!
+  2016-10-07T10:30:27.16-0400 [APP/0]      OUT 2016-10-07 14:30:27 [http-nio-8080-exec-7] INFO  i.p.c.s.service.InstanceService - creating service instance: 727b9a....
   ...
   ```
 12. Bind an app to the service and check the logs again:
@@ -86,8 +86,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf bind-service someOtherApp hello-service
   ...
-  2016-09-22T10:42:42.81-0400 [APP/0]      OUT 2016-09-22 14:42:42 [http-nio-8080-exec-10] INFO  i.p.c.s.hello.HelloService - hello!, I am creating a binding!
-  2016-09-22T10:42:42.81-0400 [APP/0]      OUT 2016-09-22 14:42:42 [http-nio-8080-exec-10] INFO  i.p.c.s.hello.HelloService - hello!, I am returning credentials!
+  2016-10-07T10:30:42.61-0400 [APP/0]      OUT 2016-10-07 14:30:42 [http-nio-8080-exec-8] INFO  i.p.c.s.service.BindingService - creating binding for service instance: 727b9a....
   ...
   ```
 13. Restage the service you bound to and look at its env: you should see some hello credentials in there:
@@ -99,27 +98,28 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```
   ```json
    {
-    "hello": [
-     {
-      "credentials": {
-       "database": "helloDB",
-       "host": "helloHost",
-       "password": "world",
-       "port": "helloPort",
-       "uri": "http://hello:world@helloHost:helloPort/helloDB",
-       "username": "hello"
-      },
-      "label": "hello",
-      "name": "hello-service",
-      "plan": "hi",
-      "provider": null,
-      "syslog_drain_url": null,
-      "tags": [
-       "hello"
-      ],
-      "volume_mounts": []
-     }
-    ]
+    "VCAP_SERVICES": {
+     "hello": [
+      {
+       "credentials": {
+        "hostname": "hello-service.cfapps-04.haas-26.pez.pivotal.io",
+        "password": "8a7c8bc4-16b5-4f75-8b4f-7d26a4ae95bb",
+        "port": "80",
+        "uri": "hello://63810f09-c0a6-4a93-9a38-577cc5dccd0d:8a7c8bc4-16b5-4f75-8b4f-7d26a4ae95bb@hello-service.cfapps-04.haas-26.pez.pivotal.io:80",
+        "username": "63810f09-c0a6-4a93-9a38-577cc5dccd0d"
+       },
+       "label": "hello",
+       "name": "hello-service",
+       "plan": "hi",
+       "provider": null,
+       "syslog_drain_url": null,
+       "tags": [
+        "hello"
+       ],
+       "volume_mounts": []
+      }
+     ]
+    }
    }
   ```
 14. Unbind your app from the service and look at the logs:
@@ -127,7 +127,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf unbind-service someOtherApp hello-service
   ...
-  2016-09-22T10:48:39.32-0400 [APP/0]      OUT 2016-09-22 14:48:39 [http-nio-8080-exec-3] INFO  i.p.c.s.hello.HelloService - hello!, I am deleting a binding!
+  2016-10-07T10:38:23.23-0400 [APP/0]      OUT 2016-10-07 14:38:23 [http-nio-8080-exec-5] INFO  i.p.cf.servicebroker.HelloBroker - deprovisioning user: 63810f0...
   ...
   ```
 15. Delete the service and look at the logs:
@@ -135,7 +135,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf delete-service hello-service
   ...
-  2016-09-22T10:50:28.76-0400 [APP/0]      OUT 2016-09-22 14:50:28 [http-nio-8080-exec-8] INFO  i.p.c.s.hello.HelloService - hello!, I am deleting a service instance!
+  2016-10-07T10:39:22.43-0400 [APP/0]      OUT 2016-10-07 14:39:22 [http-nio-8080-exec-7] INFO  i.p.c.s.service.InstanceService - starting service instance delete: 727b9a...
   ...
   ```
 16. Unregister and delete the broker:

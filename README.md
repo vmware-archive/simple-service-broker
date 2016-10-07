@@ -8,7 +8,7 @@ A simple spring boot cf service broker.
   git clone git@github.com:cf-platform-eng/simple-service-broker.git
   cd simple-service-broker
   ```
-1. Log into cf and target an org/space where you have space developer privileges.
+2. Log into cf and target an org/space where you have space developer privileges.
 1. Create the redis datastore for the broker:
   
   ```bash
@@ -29,7 +29,7 @@ A simple spring boot cf service broker.
 8. Register the broker:
   
   ```bash
-  cf create-service-broker <your broker name> user <the password from application.properties> https://<uri of your broker app>
+  cf create-service-broker your_broker_name user the_password_from_application.properties https://uri.of.your.broker.app
   ```
 9. See your new broker:
   
@@ -138,7 +138,7 @@ A simple spring boot cf service broker.
   cf delete hello-broker
   ```
 
-##Creating your own broker
+##Creating your own broker [TODO move to main readme?]
 
 1. Fork this repo (so you can save your changes into your own repository).
 1. Edit the pom.xml, application.properties and manifest.yml files as needed.
@@ -153,3 +153,5 @@ A simple spring boot cf service broker.
 
 1. See the instructions here for checking out and using the tile-generator tool [here.](https://github.com/cf-platform-eng/tile-generator)
 1. A "starter" tile.yml file is already included for the hello broker. Edit this file to configure the tile generator as needed for your broker.
+
+##[TODO create a pipeline]
