@@ -1,5 +1,6 @@
 target
 *.iml
+*.jar
 .idea/
 *.rdb
 /release/

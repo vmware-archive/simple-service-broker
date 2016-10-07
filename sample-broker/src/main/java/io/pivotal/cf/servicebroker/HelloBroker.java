@@ -1,6 +1,5 @@
 package io.pivotal.cf.servicebroker;
 
-import io.pivotal.cf.service.connector.User;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import io.pivotal.cf.servicebroker.service.DefaultServiceImpl;

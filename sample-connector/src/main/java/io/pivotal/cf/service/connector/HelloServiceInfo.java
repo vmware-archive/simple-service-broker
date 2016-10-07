@@ -1,34 +1,29 @@
 package io.pivotal.cf.service.connector;
 
-import lombok.ToString;
+import lombok.Data;
 import org.springframework.cloud.service.ServiceInfo;
 
-@ToString
+@Data
 public class HelloServiceInfo implements ServiceInfo {
 
     static final String URI_SCHEME = "hello";
 
     private String id;
-    private String host;
+    private String hostname;
+    private String username;
+    private String password;
     private String port;
-    private String adminId;
-    private String adminPw;
 
-    public HelloServiceInfo(String id, String host, String port, String adminId, String adminPw) {
+    public HelloServiceInfo(String id, String hostname, String port, String username, String password) {
         super();
         this.id = id;
-        this.host = host;
+        this.hostname = hostname;
         this.port = port;
-        this.adminId = adminId;
-        this.adminPw = adminPw;
+        this.username = username;
+        this.password = password;
     }
 
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    public String getUri() {
-        return "http://" + host + ":" + port;
+    String getUri() {
+        return "http://" + this.hostname + ":" + this.port;
     }
 }

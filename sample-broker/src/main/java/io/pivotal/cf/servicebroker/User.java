@@ -1,4 +1,4 @@
-package io.pivotal.cf.service.connector;
+package io.pivotal.cf.servicebroker;
 
 import lombok.Data;
 import lombok.NonNull;

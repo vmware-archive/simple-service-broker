@@ -16,12 +16,6 @@
 
         <dependency>
             <groupId>io.pivotal.cf.broker</groupId>
-            <artifactId>sample-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.pivotal.cf.broker</groupId>
             <artifactId>simple-broker</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

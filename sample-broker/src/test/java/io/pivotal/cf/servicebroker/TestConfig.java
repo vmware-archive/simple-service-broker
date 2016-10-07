@@ -1,6 +1,5 @@
 package io.pivotal.cf.servicebroker;
 
-import io.pivotal.cf.service.connector.User;
 import io.pivotal.cf.servicebroker.model.ServiceBinding;
 import io.pivotal.cf.servicebroker.model.ServiceInstance;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -8,7 +7,6 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindin
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
