@@ -2,8 +2,6 @@ target
 *.iml
 .idea/
 *.rdb
-resources/broker-app.jar
-simple-broker/resources/broker-app.jar
 /release/
 /product/
 tile-history*.*
