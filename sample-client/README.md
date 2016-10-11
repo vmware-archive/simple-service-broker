@@ -45,8 +45,6 @@ This is an example spring boot sample application that makes use of the sample-c
   cf env hello-client
   Getting env variables for app hello-client in org simple-service-broker-org / space simple-service-broker-space as admin...
   OK
-  ```
-  ```json
   {
    "VCAP_SERVICES": {
     "hello": [
