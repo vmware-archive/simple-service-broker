@@ -18,9 +18,11 @@ An example spring cloud service connector that vastly simplifies the use of a br
 ##[sample-client](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-client)
 An example spring boot app that uses the sample-broker provided service, via the sample-connector.
 
-Together, the sample projects can be used as a template for a fully functional demo of a custom service broker. Heck, why not also re-purpose the READMEs to help document your broker?
+##The Demo
+Together, the sample projects can be used to demo the sample-broker, and as a template for a fully functional demo of a custom service broker. Heck, why not also re-purpose the READMEs to help document your broker?
 
 To deploy and run the samples as a group, follow this order (details in the individual project READMEs):
+
 1. git clone the simple-service-broker project
 1. mvn install the simple-service-broker
 1. cf push the sample-service
