@@ -81,9 +81,9 @@ This is an example spring boot sample application that makes use of the sample-c
 ##What Just Happened?
 Looking at the project [source directory](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-client/src/main/java/io/pivotal/cf/service/client), there is no obvious configuration in sample-client. Because it uses [sample-connector](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-connector), all we needed to do to get it to connect to sample-service is:
 
-1. Add hello-service as a dependency in the manifest file.
-1. Add the @ServiceScan annotation to the [Application](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java) class.
-1. Add the @RestController annotation to [HelloClientController](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java) and include [HelloRepository](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-connector/src/main/java/io/pivotal/cf/service/connector/HelloRepository.java) as a constructor param.
+1. Add hello-service to the [manifest](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/manifest.yml#L8) file.
+1. Add the @ServiceScan annotation to the [Application](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java#L8) class.
+1. Add the [@RestController](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java#L12) annotation to HelloClientController and include [HelloRepository](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-connector/src/main/java/io/pivotal/cf/service/connector/HelloRepository.java) as a [constructor param.](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java#L15)
   
 ##What we did *not* need to do:
 We did not need to:
