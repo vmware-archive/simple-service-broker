@@ -1,18 +1,8 @@
 #sample-broker
-An example cloud foundry service broker, which uses the spring boot simple-service-broker approach to connect to an example back-end service.
+An example cloud foundry service broker that uses the simple-service-broker approach to connect to an example back-end service.
 
 ##Prerequisites
-The sample-service module contains the back-end service that this broker will be connecting to. Please see the readme for sample-service and follow the directions there to build and deploy the sample-service prior to deploying the sample-broker.
-
-Once the sample-service is running, log into cf and target an org/space where you have space developer privileges. Once there you can get the service's uri via the following command:
-  ```bash
-  cf apps
-  Getting apps in org your-org / space your-space as admin...
-  OK
-  
-  name                          requested state   instances   memory   disk   urls
-  hello-service                 started           1/1         256M     1G     hello-service.your.domain.io
-  ```
+The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-service) module contains the back-end service that this broker will be connecting to. Please see the [README](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/README.md) for sample-service and follow the directions there, prior to deploying the sample-broker.
   
 ##Using sample-broker
 1. The sample-broker requires a redis datastore. To set this up:
@@ -20,15 +10,15 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf create-service p-redis shared-vm hello-ds
   ```
-2. The broker makes use of spring-security to protect itself against unauthorized meddling. To set its password edit the application.properties file [xxx link] (you probably don't want to check this in!)
-1. Edit the manifest.yml [xxxx link] file as needed appropriate to your CF install.
-1. Build the app:
+2. The broker makes use of spring-security to protect itself against unauthorized meddling. To set its password edit the [application.properties file](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/src/main/resources/application.properties) (you probably don't want to check this in!)
+1. Edit the [manifest.yml](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/manifest.yml) file as needed for your CF install.
+1. Build the broker:
   
   ```bash
   cd sample-broker
   mvn clean install
   ```
-7. Push the app to cf:
+7. Push the broker to cf:
   
   ```bash
   cf push
@@ -38,7 +28,7 @@ Once the sample-service is running, log into cf and target an org/space where yo
   ```bash
   cf create-service-broker your_broker_name user the_password_from_application_properties https://uri.of.your.broker.app
   ```
-9. See your new broker:
+9. See the broker:
   
   ```bash
   cf service-brokers
@@ -144,19 +134,3 @@ Once the sample-service is running, log into cf and target an org/space where yo
   cf delete-service-broker hello-broker
   cf delete hello-broker
   ```
-
-##Creating your own broker
-
-1. Fork this repo (so you can save your changes into your own repository).
-1. Edit the pom.xml, application.properties and manifest.yml files as needed.
-1. Edit the application.properties and manifest.yml files as needed.
-1. Edit the sample catalog.yml file so that it describes your service and plans. Information on what goes into a catalog file can be found [here.](https://docs.cloudfoundry.org/services/api.html)
-1. Rename the Hello class file to something appropriate for your service.
-1. Add your service implementation to the example methods in the Hello class. Documentation on what the methods do and how to use them is in the Hello.java [source file.](https://github.com/cf-platform-eng/simple-service-broker/blob/master/src/main/java/io/pivotal/cf/servicebroker/broker/HelloService.java)
-1. Create some unit tests (or modify the existing tests) to test your broker.
-1. Follow the steps outlined above to build, deploy and verify your broker.
-
-##Creating a tile for your broker
-
-1. See the instructions here for checking out and using the tile-generator tool [here.](https://github.com/cf-platform-eng/tile-generator)
-1. A "starter" tile.yml file is already included for the hello broker. Edit this file to configure the tile generator as needed for your broker.

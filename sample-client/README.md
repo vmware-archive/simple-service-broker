@@ -9,8 +9,8 @@ This is an example spring boot sample application that makes use of the sample-c
   cd simple-service-broker
   mvn clean install
   ```
-2. To use the client, you will need to deploy the back-end service (sample-service) and configure and deploy the broker (sample-broker). Instruction on how to do this are in their respective README files.
-1. Then, deploy the sample client. There is nothing to configure, other than maybe changing the name of the application in the manifest file.
+2. To use the client, you will need to deploy the back-end ([sample-service](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-service)) and configure and deploy the broker ([sample-broker](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-broker)). Instruction on how to do this are in the respective README files.
+1. Then, deploy sample-client. There is nothing to configure, other than maybe changing the name of the application in the manifest file.
 
   ```bash
   cd sample-client
@@ -81,13 +81,18 @@ This is an example spring boot sample application that makes use of the sample-c
     ```
   
 ##What Just Happened?
-There is no obvious configuration in sample-client. Because it uses the sample-connector, all we needed to do to get it to connect to the sample service is:
+Looking at the project [source directory](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-client/src/main/java/io/pivotal/cf/service/client), there is no obvious configuration in sample-client. Because it uses [sample-connector](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-connector), all we needed to do to get it to connect to sample-service is:
+
 1. Add hello-service as a dependency in the manifest file.
-2. Add the @ServiceScan annotation to the [Application](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java) class.
-3. Add the @RestController annotation to [HelloClientController](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java) and include [HelloRepository](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-connector/src/main/java/io/pivotal/cf/service/connector/HelloRepository.java) as a constructor param.
+1. Add the @ServiceScan annotation to the [Application](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java) class.
+1. Add the @RestController annotation to [HelloClientController](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java) and include [HelloRepository](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-connector/src/main/java/io/pivotal/cf/service/connector/HelloRepository.java) as a constructor param.
   
-##What we did not need to do:
-We did not need to tell sample-client what the hello-service was, or where to find it, or what credentials to use, or anything.
-We did not need to parse through json or directly process environment variables.
+##What we did *not* need to do:
+We did not need to:
+  * tell sample-client what the hello-service was
+  * or where to find it
+  * or what credentials to use
+  * or parse through json or directly process environment variables
+  * or anything other than include the sample-client jar in our [project dependencies](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/pom.xml#L26-L30)
 
 Consider providing a connector to your broker: your clients will thank you.
