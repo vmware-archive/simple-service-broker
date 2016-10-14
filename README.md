@@ -29,11 +29,9 @@ To deploy and run the samples as a group, follow this order (details in the indi
 1. cf push, register, and enable the sample-broker
 1. cf push the sample-client
 
-##[todo] Create a tile for your broker
+##Create a tile for your broker
+For instructions on how to create an [Ops Manager tile](https://docs.pivotal.io/partners/deploying-with-ops-man-tile.html) for your broker in the sample-broker [README](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/README.md).
 
-1. See the instructions for checking out and using the tile-generator tool [here.](https://github.com/cf-platform-eng/tile-generator)
-1. A "starter" tile.yml file is included for the sample broker. Edit this file to configure the tile generator as needed.
-1. test this, document it.....
 
 ##[todo] Create a pipeline for your broker
 

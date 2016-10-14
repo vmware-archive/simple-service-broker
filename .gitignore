@@ -7,3 +7,6 @@ target
 /product/
 tile-history*.*
 /env/
+tile-generator
+sample-broker/product
+sample-broker/release

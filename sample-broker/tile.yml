@@ -2,8 +2,8 @@
 # The high-level description of your tile.
 # Replace these properties with real values.
 #
-name: simple-service-broker # By convention lowercase with dashes
-icon_file: resources/pivotal.png
+name: sample-broker # By convention lowercase with dashes
+icon_file: resources/icon.png
 label: Hello Broker
 description: A simple demo broker that can be used as a template for your broker.
 
@@ -22,12 +22,13 @@ apply_open_security_group: true         # Apply open security group, default: fa
 # https://github.com/cf-platform-eng/tile-generator/blob/master/README.md
 #
 packages:
-- name: simple-service-broker
+- name: hello-broker
   type: app-broker
   enable_global_access_to_plans: true
   manifest:
-    path: resources/broker-app.jar
+    path: target/sample-broker-1.0.0.jar
   auto_services: p-redis
+#   command: python app.py
 #   memory: 256M
 
 # Include stemcell criteria if you don't want to accept the default.
@@ -61,22 +62,27 @@ forms:
   label: Hello Broker
   description: Hello Broker properties
   properties:
-  - name: greeting
-    type: string
-    default: 'Hello'
-    label: Greeting
-    description: What the broker says to the user in the logs
   - name: api_version
     type: string
     default: '2.9'
     label: Broker API Version
     description: Which service broker api this broker supports
+  - name: hello_host
+    type: string
+    default: 'localhost'
+    label: hello-service host
+    description: Host where the hello-service backend is running
+  - name: hello_port
+    type: integer
+    default: 80
+    label: hello-service port
+    description: Port for the hello-service backend
 
 # Add any dependencies your tile has on other installed products.
 # This is often appropriate when using automatic service provisioning
 # for any of your packages above, with services provided by other
 # products.
 #
-# requires_product_versions:
-# - name: p-mysql
-#   version: '~> 1.7'
+requires_product_versions:
+- name: p-redis
+  version: '~> 1.5'

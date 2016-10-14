@@ -134,3 +134,14 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   cf delete-service-broker hello-broker
   cf delete hello-broker
   ```
+ 
+##Creating an Ops Manager Tile
+Ops Manager Tiles are a way of packaging up your release so that it can be [easily configured and deployed](https://docs.pivotal.io/partners/deploying-with-ops-man-tile.html) via the Ops Manager UI.
+
+1. To make tile creation itself an easy process, we have the tile-gen tool. See the instructions [here.](https://github.com/cf-platform-eng/tile-generator)
+1. A "starter" tile.yml file is included for the sample-broker. It can be used to generate a working tile for the sample-broker, or adapted for use for your tile. Instructions on what to put in this tile are on the tile-gen site, above.
+1. Before installing your tile, make sure to cf push a sample-service instance: this represents the back-end service the tile will talk to. Instructions on how to do this are [here.](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-service/README.md)
+1. You will want to unregister and uninstall any other version of the sample-broker running on the cf instance before installing the tile (if, for instance, you followed the instructions on how to manually deploy and register your sample-broker). Instructions for manually removing the broker start at item 14, above.
+1. After the tile-gen tool have been installed (see the tile-gen documentation site), edit tile.yml as needed, and run "tile build" to create a tile.
+1. Once your tile has been generated, use Ops Manager to upload, install, and configure it. Configuration is done on the "Settings" tab (click on the tile to access this). API version, sample-service host, and port should be set, based on the uri of the sample-service you deployed.
+1. When you are returned to the Ops Manager page, hit "Apply Changes" and your broker will be deployed.
