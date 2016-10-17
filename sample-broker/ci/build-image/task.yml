@@ -1,0 +1,11 @@
+---
+platform: linux
+
+image: docker:///busybox
+
+inputs:
+- name: tile-repo
+- name: broker-jar
+
+run:
+  path: tile-repo/sample-broker/ci/build-image/task.sh
