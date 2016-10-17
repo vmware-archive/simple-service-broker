@@ -23,6 +23,13 @@ resources:
     secret_access_key: {{aws-key}}
     initial_version: 1.0.1
 
+ - name: docker-image
+   type: docker-image-resource
+   source:
+     repository: cfplatformeng
+     username: {{docker-username}}
+     password: {{docker-password}}
+
 - name: tile-repo
   type: git
   source:
@@ -128,11 +135,16 @@ jobs:
   - put: version
     params: {file: version/number}
 
+- name: build-image
+  plan:
+  - get: tile-repo
+  - put: docker-image
+    params: {build: tile-repo}
+
 - name: build-tile
   serial_groups: [version]
   plan:
   - aggregate:
-    - get: tile-generator-repo
     - get: tile-repo
     - get: broker-jar
       trigger: true
