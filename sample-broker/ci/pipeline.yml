@@ -122,7 +122,7 @@ jobs:
   - get: version
     params: {bump: patch}
   - task: build-broker
-    file: tile-repo/ci/build-broker/task.yml
+    file: tile-repo/sample-broker/ci/build-broker/task.yml
   - put: broker-jar
     params: {file: broker-jar/*.jar}
   - put: version
@@ -141,7 +141,7 @@ jobs:
     - get: version
     - get: tile-history
   - task: build-tile
-    file: tile-repo/ci/build-tile/task.yml
+    file: tile-repo/sample-broker/ci/build-tile/task.yml
   - put: tile-history
     params:
       file: tile-history-new/*.yml
