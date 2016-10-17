@@ -11,4 +11,4 @@ outputs:
 - name: broker-jar
 
 run:
-  path: tile-repo/ci/build-broker/task.sh
+  path: tile-repo/sample-broker/ci/build-broker/task.sh
