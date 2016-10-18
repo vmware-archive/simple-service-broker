@@ -1,11 +1,14 @@
 ---
 platform: linux
 
-image: docker:///busybox
+image: docker:///cfplatformeng/tile-inator
 
 inputs:
 - name: tile-repo
 - name: broker-jar
+
+outputs:
+- name: broker-tile
 
 run:
   path: tile-repo/sample-broker/ci/build-image/task.sh

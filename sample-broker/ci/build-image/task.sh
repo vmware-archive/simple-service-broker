@@ -1,7 +1,9 @@
-#!/bin/bash -ex
+#!/bin/sh -ex
 
-cd tile-repo
+cd tile-repo/sample-broker
 
 mkdir target
+cp ../../broker-jar/*.jar target/
+tile build
 
-cp ../broker-jar/*.jar target/
+cp product/*.pivotal ../../broker-tile

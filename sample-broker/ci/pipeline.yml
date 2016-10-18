@@ -2,6 +2,7 @@ groups:
 - name: all
   jobs:
   - build-broker
+  - build-image
   - build-tile
   - claim-pcf
   - deploy-tile
@@ -23,12 +24,12 @@ resources:
     secret_access_key: {{aws-key}}
     initial_version: 1.0.1
 
- - name: docker-image
-   type: docker-image-resource
-   source:
-     repository: cfplatformeng
-     username: {{docker-username}}
-     password: {{docker-password}}
+- name: hello-tile-gen-image
+  type: docker-image
+  source:
+    repository: cfplatformeng
+    username: {{docker-username}}
+    password: {{docker-password}}
 
 - name: tile-repo
   type: git
@@ -136,10 +137,14 @@ jobs:
     params: {file: version/number}
 
 - name: build-image
+  serial_groups: [version]
   plan:
-  - get: tile-repo
-  - put: docker-image
-    params: {build: tile-repo}
+  - aggregate:
+    - get: tile-repo
+    - get: broker-jar
+  - task: build-image
+    file: tile-repo/sample-broker/ci/build-image/task.yml
+  - put: broker-tile
 
 - name: build-tile
   serial_groups: [version]
