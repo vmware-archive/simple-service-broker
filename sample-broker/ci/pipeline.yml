@@ -115,7 +115,6 @@ jobs:
 - name: deploy-tile
   plan:
   - aggregate:
-    - get: tile-generator-repo
     - get: broker-tile
       passed:
       - claim-pcf
@@ -124,26 +123,14 @@ jobs:
       passed:
       - claim-pcf
     - get: tile-repo
-  - task: run-deploy-tile
-    config:
-      platform: linux
-      image: docker:///guidowb/tile-pipeline
-      run:
-        path: tile-repo/ci/deploy-tile/task.sh
-        args:
-        - tile-generator-repo
-        - apigee-tile-repo
-        - apigee-tile
-        - pcf-environment
-      inputs:
-      - name: tile-generator-repo
-        path: ""
-      - name: pcf-environment
-        path: ""
-      - name: broker-tile
-        path: ""
-      - name: tile-repo
-        path: ""
+    - get: version
+  - task: deploy-tile
+    file: tile-repo/sample-broker/ci/deploy-tile/task.yml
+    on_failure:
+      aggregate:
+      - put: pcf-environment
+        params:
+          release: pcf-environment
 
 - name: test-deploy
   plan:

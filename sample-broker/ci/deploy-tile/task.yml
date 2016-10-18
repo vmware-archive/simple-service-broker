@@ -1,13 +1,13 @@
 ---
 platform: linux
 
-image: docker:///guidowb/tile-pipeline
+image: docker:///cfplatformeng/tile-inator
 
 inputs:
-- name: tile-generator-repo
-- name: tile-repo
 - name: broker-tile
+- name: version
 - name: pcf-environment
+- name: tile-repo
 
 run:
   path: tile-repo/ci/deploy-tile/task.sh
