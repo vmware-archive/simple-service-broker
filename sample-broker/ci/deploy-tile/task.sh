@@ -37,7 +37,7 @@ PCF is-installed "${PRODUCT}" "${VERSION}"
 echo
 
 echo "Configuring product ${PRODUCT}"
-PCF configure "${PRODUCT}" "../tile-repo/sample-brokerci/missing-properties.yml"
+PCF configure "${PRODUCT}" "../tile-repo/sample-broker/ci/missing-properties.yml"
 echo
 
 echo "Applying Changes"

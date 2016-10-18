@@ -10,4 +10,4 @@ inputs:
 - name: tile-repo
 
 run:
-  path: tile-repo/ci/deploy-tile/task.sh
+  path: tile-repo/sample-broker/ci/deploy-tile/task.sh
