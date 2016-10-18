@@ -26,7 +26,7 @@ packages:
   type: app-broker
   enable_global_access_to_plans: true
   manifest:
-    path: target/sample-broker-1.0.0.jar
+    path: target/hello-broker.jar
   auto_services: p-redis
 #   command: python app.py
 #   memory: 256M
