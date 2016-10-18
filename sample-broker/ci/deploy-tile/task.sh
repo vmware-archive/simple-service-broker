@@ -15,31 +15,31 @@ VERSION=`more version/number`
 cd pcf-environment
 
 echo "Available products:"
-PCF products
+pcf products
 echo
 
 echo "Uploading ${TILE_FILE}"
-PCF import broker-tile/${TILE_FILE}
+pcf import broker-tile/${TILE_FILE}
 echo
 
 echo "Available products:"
-PCF products
-PCF is-available "${PRODUCT}" "${VERSION}"
+pcf products
+pcf is-available "${PRODUCT}" "${VERSION}"
 echo
 
 echo "Installing product ${PRODUCT} version ${VERSION}"
-PCF install "${PRODUCT}" "${VERSION}"
+pcf install "${PRODUCT}" "${VERSION}"
 echo
 
 echo "Available products:"
-PCF products
-PCF is-installed "${PRODUCT}" "${VERSION}"
+pcf products
+pcf is-installed "${PRODUCT}" "${VERSION}"
 echo
 
 echo "Configuring product ${PRODUCT}"
-PCF configure "${PRODUCT}" "../tile-repo/sample-broker/ci/missing-properties.yml"
+pcf configure "${PRODUCT}" "../tile-repo/sample-broker/ci/missing-properties.yml"
 echo
 
 echo "Applying Changes"
-PCF apply-changes
+pcf apply-changes
 echo
