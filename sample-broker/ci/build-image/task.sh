@@ -6,4 +6,9 @@ mkdir target
 cp ../../broker-jar/*.jar target/hello-broker.jar
 tile build
 
-cp product/*.pivotal ../../broker-tile
+file=`ls product/*.pivotal`
+filename=$(basename "${file}")
+filename="${filename%-*}"
+ver=`more ../number`
+
+cp ${file} ../../broker-tile/${filename}-${ver}.pivotal

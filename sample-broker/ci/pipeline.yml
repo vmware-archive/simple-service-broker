@@ -145,6 +145,8 @@ jobs:
   - task: build-image
     file: tile-repo/sample-broker/ci/build-image/task.yml
   - put: broker-tile
+    params:
+      file: broker-tile/*.pivotal
 
 - name: build-tile
   serial_groups: [version]

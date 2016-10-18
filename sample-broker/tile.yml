@@ -2,7 +2,7 @@
 # The high-level description of your tile.
 # Replace these properties with real values.
 #
-name: sample-broker # By convention lowercase with dashes
+name: hello-broker # By convention lowercase with dashes
 icon_file: resources/icon.png
 label: Hello Broker
 description: A simple demo broker that can be used as a template for your broker.
