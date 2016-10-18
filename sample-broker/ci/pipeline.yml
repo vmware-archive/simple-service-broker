@@ -2,7 +2,6 @@ groups:
 - name: all
   jobs:
   - build-broker
-  - build-image
   - build-tile
   - claim-pcf
   - deploy-tile
@@ -85,19 +84,6 @@ jobs:
   - put: version
     params: {file: version/number}
 
-- name: build-image
-  serial_groups: [version]
-  plan:
-  - aggregate:
-    - get: tile-repo
-    - get: broker-jar
-    - get: version
-  - task: build-image
-    file: tile-repo/sample-broker/ci/build-image/task.yml
-  - put: broker-tile
-    params:
-      file: broker-tile/*.pivotal
-
 - name: build-tile
   serial_groups: [version]
   plan:
@@ -106,14 +92,10 @@ jobs:
     - get: broker-jar
       trigger: true
       passed:
-      - build-broker
+        - build-broker
     - get: version
-    - get: tile-history
   - task: build-tile
     file: tile-repo/sample-broker/ci/build-tile/task.yml
-  - put: tile-history
-    params:
-      file: tile-history-new/*.yml
   - put: broker-tile
     params:
       file: broker-tile/*.pivotal

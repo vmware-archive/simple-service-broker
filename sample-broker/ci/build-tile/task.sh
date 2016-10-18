@@ -1,17 +1,14 @@
 #!/bin/sh -ex
 
-HISTORY=`ls tile-history/tile-history-*.yml`
-if [ -n "${HISTORY}" ]; then
-	cp ${HISTORY} tile-history.yml
-fi
+cd tile-repo/sample-broker
 
-cd tile-repo
-mkdir -p resources
-cp ../broker-jar/*.jar resources/broker-app.jar
-../tile-generator-repo/bin/tile build
+mkdir target
+cp ../../broker-jar/*.jar target/hello-broker.jar
+tile build
 
-VERSION=`grep '^version:' ../tile-history/tile-history.yml | sed 's/^version: //'`
-HISTORY="tile-history-${VERSION}.yml"
+file=`ls product/*.pivotal`
+filename=$(basename "${file}")
+filename="${filename%-*}"
+ver=`more ../../version/number`
 
-cp product/*.pivotal ../broker-tile
-cp tile-history.yml ../tile-history-new/tile-history-${VERSION}.yml
+cp ${file} ../../broker-tile/${filename}-${ver}.pivotal
