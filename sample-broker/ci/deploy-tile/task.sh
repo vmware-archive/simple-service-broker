@@ -1,7 +1,5 @@
 #!/bin/sh -ex
 
-REPO_DIR="$( cd tile-repo  && pwd )"
-POOL_DIR="$( cd pcf-environment && pwd )"
 TILE_FILE=`cd broker-tile; ls *.pivotal`
 if [ -z "${TILE_FILE}" ]; then
 	echo "No files matching broker-tile/*.pivotal"
@@ -11,8 +9,6 @@ fi
 
 PRODUCT=`echo "${TILE_FILE}" | sed "s/-[^-]*$//"`
 VERSION=`more version/number`
-
-cd pcf-environment
 
 echo "Available products:"
 pcf products
@@ -37,7 +33,7 @@ pcf is-installed "${PRODUCT}" "${VERSION}"
 echo
 
 echo "Configuring product ${PRODUCT}"
-pcf configure "${PRODUCT}" "../tile-repo/sample-broker/ci/missing-properties.yml"
+pcf configure "${PRODUCT}" "tile-repo/sample-broker/ci/missing-properties.yml"
 echo
 
 echo "Applying Changes"
