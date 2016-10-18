@@ -24,13 +24,6 @@ resources:
     secret_access_key: {{aws-key}}
     initial_version: 1.0.1
 
-- name: hello-tile-gen-image
-  type: docker-image
-  source:
-    repository: cfplatformeng
-    username: {{docker-username}}
-    password: {{docker-password}}
-
 - name: tile-repo
   type: git
   source:
@@ -52,35 +45,6 @@ resources:
     pool: pcf
     private_key: {{github-pool-private-key}}
     uri: git@github.com:cf-platform-eng/pipeline-resource-pool
-
-- name: slack-alert
-  type: slack-notification
-  source:
-    url: {{slack-url}}
-
-- name: deploy-tile-log
-  type: s3
-  source:
-    access_key_id: {{aws-key-id}}
-    bucket: {{bucket-name}}
-    secret_access_key: {{aws-key}}
-    versioned_file: deploy-tile-log.txt
-
-- name: test-deploy-log
-  type: s3
-  source:
-    access_key_id: {{aws-key-id}}
-    bucket: {{bucket-name}}
-    secret_access_key: {{aws-key}}
-    versioned_file: test-deploy-log.txt
-
-- name: remove-tile-log
-  type: s3
-  source:
-    access_key_id: {{aws-key-id}}
-    bucket: {{bucket-name}}
-    secret_access_key: {{aws-key}}
-    versioned_file: remove-tile-log.txt
 
 - name: broker-tile
   type: s3
@@ -106,21 +70,6 @@ resources:
     regexp: tile\-history-(?P<version>.*)\.yml
     secret_access_key: {{aws-key}}
 
-- name: test-deploy-report
-  type: s3
-  source:
-    access_key_id: {{aws-key-id}}
-    bucket: {{bucket-name}}
-    regexp: test-deploy-report-(?P<version>.*)\.tgz
-    secret_access_key: {{aws-key}}
-
-resource_types:
-- name: slack-notification
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource
-    tag: latest
-
 jobs:
 - name: build-broker
   serial_groups: [version]
@@ -142,6 +91,7 @@ jobs:
   - aggregate:
     - get: tile-repo
     - get: broker-jar
+    - get: version
   - task: build-image
     file: tile-repo/sample-broker/ci/build-image/task.yml
   - put: broker-tile
@@ -227,23 +177,9 @@ jobs:
       file: tile-repo/ci/test-deploy/task.yml
     on_failure:
       aggregate:
-      - put: slack-alert
-        params:
-          channel: '@jaredgordon'
-          icon_emoji: ':robot_face:'
-          text: test-deploy failed; check main pipeline
-          username: Build pipeline
       - put: pcf-environment
         params:
           release: pcf-environment
-    ensure:
-      aggregate:
-      - put: test-deploy-log
-        params:
-          file: log/test-deploy-log.txt
-      - put: test-deploy-report
-        params:
-          file: log/test-deploy-report-*.tgz
 
 - name: remove-tile
   plan:
@@ -258,25 +194,9 @@ jobs:
       file: tile-repo/ci/remove-tile/task.yml
     on_failure:
       aggregate:
-      - put: slack-alert
-        params:
-          channel: '@jaredgordon'
-          icon_emoji: ':robot_face:'
-          text: (1.6) remove-tile failed; check pipeline
-          username: Build pipeline
       - put: pcf-environment
         params:
           release: pcf-environment
-    ensure:
-      put: remove-tile-log
-      params:
-        file: log/remove-tile-log.txt
-  - put: slack-alert
-    params:
-      channel: '@jaredgordon'
-      icon_emoji: ':robot_face:'
-      text: Successfully built/deployed/tested/removed new tile
-      username: Build pipeline
 
 - name: release-pcf
   serial_groups: [version]

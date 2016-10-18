@@ -6,6 +6,7 @@ image: docker:///cfplatformeng/tile-inator
 inputs:
 - name: tile-repo
 - name: broker-jar
+- name: version
 
 outputs:
 - name: broker-tile

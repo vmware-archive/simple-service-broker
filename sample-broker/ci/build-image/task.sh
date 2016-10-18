@@ -9,6 +9,6 @@ tile build
 file=`ls product/*.pivotal`
 filename=$(basename "${file}")
 filename="${filename%-*}"
-ver=`more ../number`
+ver=`more ../../version/number`
 
 cp ${file} ../../broker-tile/${filename}-${ver}.pivotal
