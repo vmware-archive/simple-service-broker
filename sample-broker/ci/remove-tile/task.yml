@@ -1,7 +1,7 @@
 ---
 platform: linux
 
-image: docker:///guidowb/tile-pipeline
+image: docker:///cfplatformeng/tile-generator
 
 inputs:
 - name: tile-generator-repo

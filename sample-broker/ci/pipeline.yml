@@ -29,21 +29,13 @@ resources:
     branch: master
     uri: http://github.com/cf-platform-eng/simple-service-broker
 
-- name: tile-generator-repo
-  type: git
-  source:
-    branch: master
-    ignore_paths:
-    - sample
-    uri: http://github.com/cf-platform-eng/tile-generator.git
-
 - name: pcf-environment
   type: pool
   source:
     branch: master
     pool: pcf
     private_key: {{github-pool-private-key}}
-    uri: git@github.com:cf-platform-eng/pipeline-resource-pool
+    uri: git@github.com:cf-platform-eng/pipeline-resource-pool-v2
 
 - name: broker-tile
   type: s3
@@ -135,7 +127,6 @@ jobs:
 - name: test-deploy
   plan:
   - aggregate:
-    - get: tile-generator-repo
     - get: pcf-environment
       passed:
       - deploy-tile
@@ -153,7 +144,6 @@ jobs:
 - name: remove-tile
   plan:
   - aggregate:
-    - get: tile-generator-repo
     - get: tile-repo
     - get: pcf-environment
       passed:
