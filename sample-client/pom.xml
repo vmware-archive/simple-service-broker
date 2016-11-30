@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.pivotal.cf.broker</groupId>
+        <groupId>io.pivotal.ecosystem</groupId>
         <artifactId>simple-service-broker</artifactId>
         <version>1.0.0</version>
     </parent>
