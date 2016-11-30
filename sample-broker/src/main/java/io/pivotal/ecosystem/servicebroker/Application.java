@@ -15,34 +15,16 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker;
+package io.pivotal.ecosystem.servicebroker;
 
-import lombok.Data;
-import lombok.NonNull;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.Serializable;
+@SpringBootApplication
+public class Application {
 
-@Data
-public class User implements Serializable {
-
-    public enum Role {Broker, User};
-
-    private String name;
-    private String password;
-    private Role role;
-
-    public User(@NonNull String name, @NonNull Role role) {
-        this();
-        this.name = name;
-        this.role = role;
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
     }
 
-    public User(@NonNull String name, @NonNull String password, @NonNull Role role) {
-        this(name, role);
-        this.password = password;
-    }
-
-    public User() {
-        super();
-    }
 }

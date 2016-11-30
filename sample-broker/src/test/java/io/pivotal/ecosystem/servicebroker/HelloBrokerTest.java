@@ -15,11 +15,11 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker;
+package io.pivotal.ecosystem.servicebroker;
 
-import io.pivotal.cf.servicebroker.model.ServiceBinding;
-import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import io.pivotal.cf.servicebroker.service.BrokeredService;
+import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import io.pivotal.ecosystem.servicebroker.service.BrokeredService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker;
+package io.pivotal.ecosystem.servicebroker;
 
 import feign.Headers;
 import feign.Param;

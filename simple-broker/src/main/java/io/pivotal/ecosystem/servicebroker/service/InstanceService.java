@@ -15,9 +15,9 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker.service;
+package io.pivotal.ecosystem.servicebroker.service;
 
-import io.pivotal.cf.servicebroker.model.ServiceInstance;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceDefinitionDoesNotExistException;
@@ -136,7 +136,7 @@ public class InstanceService implements ServiceInstanceService {
         return instance;
     }
 
-    private ServiceInstance saveInstance(io.pivotal.cf.servicebroker.model.ServiceInstance instance) {
+    private ServiceInstance saveInstance(io.pivotal.ecosystem.servicebroker.model.ServiceInstance instance) {
         log.info("saving service instance to repo: " + instance.getId());
         instanceTemplate.opsForHash().put(OBJECT_ID, instance.getId(), instance);
         return instance;

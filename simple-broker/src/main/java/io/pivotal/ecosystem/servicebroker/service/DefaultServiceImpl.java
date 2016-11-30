@@ -15,10 +15,10 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker.service;
+package io.pivotal.ecosystem.servicebroker.service;
 
-import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import io.pivotal.cf.servicebroker.model.ServiceBinding;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 
 import java.util.HashMap;

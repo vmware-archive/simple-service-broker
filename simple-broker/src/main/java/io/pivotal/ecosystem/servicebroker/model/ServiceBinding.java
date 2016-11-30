@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker.model;
+package io.pivotal.ecosystem.servicebroker.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

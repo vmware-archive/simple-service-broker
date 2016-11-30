@@ -15,63 +15,39 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.servicebroker;
+package io.pivotal.ecosystem.servicebroker;
 
-import io.pivotal.cf.servicebroker.model.ServiceBinding;
-import io.pivotal.cf.servicebroker.model.ServiceInstance;
-import io.pivotal.cf.servicebroker.service.*;
+import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.servicebroker.model.*;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class TestConfig {
+class TestConfig {
 
-    public static final String SI_ID = "siId";
-    public static final String SB_ID = "sbId";
-    public static final String SD_ID = "aUniqueId";
+    static final String SI_ID = "siId";
+    static final String SB_ID = "sbId";
 
+    private static final String SD_ID = "aUniqueId";
     private static final String PLAN_ID = "anotherUniqueId";
     private static final String APP_GUID = "anAppGuid";
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
 
-    @Bean
-    public CatalogService catalogService() {
-        return new CatalogService();
-    }
-
-    @Bean
-    public InstanceService instanceService(CatalogService catalogService, BrokeredService brokeredService,
-                                           RedisTemplate<String, ServiceInstance> instanceTemplate) {
-        return new InstanceService(catalogService, brokeredService, instanceTemplate);
-    }
-
-    @Bean
-    public BindingService bindingService(InstanceService instanceService, BrokeredService brokeredService,
-                                         RedisTemplate<String, ServiceBinding> bindingTemplate) {
-        return new BindingService(instanceService, brokeredService, bindingTemplate);
-    }
-
-    @Bean
-    public BrokeredService brokeredService() {
-        return new DefaultServiceImpl();
-    }
+    static final String PASSWORD = "password";
 
     @MockBean
     private RedisTemplate<String, ServiceInstance> instanceTemplate;
 
     @MockBean
     private RedisTemplate<String, ServiceBinding> bindingTemplate;
-
-    @MockBean
-    private HashOperations<String, Object, Object> hashOperations;
 
     @Bean
     public CreateServiceInstanceRequest createServiceInstanceRequest() {
@@ -83,6 +59,16 @@ public class TestConfig {
     @Bean
     public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
         return new ServiceInstance(req);
+    }
+
+    @Bean
+    public User instanceUser() {
+        return new User(SI_ID, User.Role.Broker);
+    }
+
+    @Bean
+    public User bindingUser() {
+        return new User(SB_ID, User.Role.User);
     }
 
     private Map<String, Object> getBindResources() {
@@ -110,26 +96,5 @@ public class TestConfig {
     @Bean
     public ServiceBinding serviceBinding(CreateServiceInstanceBindingRequest req) {
         return new ServiceBinding(req);
-    }
-
-    @Bean
-    public DeleteServiceInstanceBindingRequest deleteBindingRequest() {
-        return new DeleteServiceInstanceBindingRequest(SI_ID, SB_ID, SD_ID, PLAN_ID,
-                catalogService().getServiceDefinition(SD_ID));
-    }
-
-    @Bean
-    UpdateServiceInstanceRequest updateServiceInstanceRequest() {
-        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
-        req.withServiceDefinition(catalogService().getServiceDefinition(SD_ID));
-        req.withServiceInstanceId(SI_ID);
-        return req;
-    }
-
-    @Bean
-    DeleteServiceInstanceRequest deleteServiceInstanceRequest() {
-        DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(SI_ID, SD_ID, PLAN_ID,
-                catalogService().getServiceDefinition(SD_ID));
-        return req;
     }
 }
