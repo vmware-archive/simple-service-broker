@@ -31,8 +31,3 @@ To deploy and run the samples as a group, follow this order (details in the indi
 
 ##Create a tile for your broker
 For instructions on how to create an [Ops Manager tile](https://docs.pivotal.io/partners/deploying-with-ops-man-tile.html) for your broker in the sample-broker [README](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/README.md).
-
-
-##[todo] Create a pipeline for your broker
-
-1. create example pipeline, document it here....
