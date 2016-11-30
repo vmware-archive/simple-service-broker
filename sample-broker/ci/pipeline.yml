@@ -58,7 +58,7 @@ resources:
   source:
     access_key_id: {{aws-key-id}}
     bucket: {{bucket-name}}
-    regexp: tile\-history-(?P<version>.*)\.yml
+    regexp: tile-history-(?P<version>.*)\.yml
     secret_access_key: {{aws-key}}
 
 jobs:
@@ -81,6 +81,7 @@ jobs:
   plan:
   - aggregate:
     - get: tile-repo
+    - get: tile-history
     - get: broker-jar
       trigger: true
       passed:
