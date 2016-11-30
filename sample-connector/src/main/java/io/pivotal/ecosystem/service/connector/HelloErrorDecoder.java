@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.connector;
 
 import feign.Response;
 import feign.Util;

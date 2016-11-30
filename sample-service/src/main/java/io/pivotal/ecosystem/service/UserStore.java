@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service;
+package io.pivotal.ecosystem.service;
 
 import lombok.NonNull;
 import org.springframework.stereotype.Service;

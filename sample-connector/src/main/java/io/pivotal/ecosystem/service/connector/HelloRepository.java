@@ -15,17 +15,15 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.client;
+package io.pivotal.ecosystem.service.connector;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.config.java.ServiceScan;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
-@SpringBootApplication
-@ServiceScan
-public class Application {
+public interface HelloRepository {
 
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
+    @Headers("Content-Type: application/json")
+    @RequestLine("GET /greeting?username={username}")
+    String greeting(@Param(value = "username") String username);
 }

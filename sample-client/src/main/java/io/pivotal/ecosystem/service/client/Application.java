@@ -15,18 +15,17 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.client;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.service.AbstractServiceConnectorCreator;
-import org.springframework.cloud.service.ServiceConnectorConfig;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.config.java.ServiceScan;
 
-@Slf4j
-public class HelloConnectionCreator extends AbstractServiceConnectorCreator<HelloRepository, HelloServiceInfo> {
+@SpringBootApplication
+@ServiceScan
+public class Application {
 
-    @Override
-    public HelloRepository create(HelloServiceInfo serviceInfo, ServiceConnectorConfig serviceConnectorConfig) {
-        log.debug("creating hello repo wth service info: " + serviceInfo);
-        return new HelloRepositoryFactory().create(serviceInfo);
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
     }
 }

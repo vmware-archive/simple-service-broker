@@ -15,10 +15,10 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.client;
+package io.pivotal.ecosystem.service.client;
 
-import io.pivotal.cf.service.connector.HelloException;
-import io.pivotal.cf.service.connector.HelloRepository;
+import io.pivotal.ecosystem.service.connector.HelloException;
+import io.pivotal.ecosystem.service.connector.HelloRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -15,18 +15,19 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.connector;
 
-import lombok.Data;
-import org.springframework.http.HttpStatus;
+import feign.Feign;
+import lombok.extern.slf4j.Slf4j;
 
-@Data
-public class HelloException extends RuntimeException {
+@Slf4j
+public class HelloRepositoryFactory {
 
-    private HttpStatus status;
+    public HelloRepository create(HelloServiceInfo info) {
+        log.info("creating helloRepository with info: " + info);
 
-    HelloException(String s, HttpStatus status) {
-        super(s);
-        this.status = status;
+        return Feign.builder()
+                .errorDecoder(new HelloErrorDecoder())
+                .target(HelloRepository.class, info.getUri());
     }
 }

@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service;
+package io.pivotal.ecosystem.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;

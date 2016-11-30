@@ -15,19 +15,18 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.connector;
 
-import feign.Feign;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.service.AbstractServiceConnectorCreator;
+import org.springframework.cloud.service.ServiceConnectorConfig;
 
 @Slf4j
-public class HelloRepositoryFactory {
+public class HelloConnectionCreator extends AbstractServiceConnectorCreator<HelloRepository, HelloServiceInfo> {
 
-    public HelloRepository create(HelloServiceInfo info) {
-        log.info("creating helloRepository with info: " + info);
-
-        return Feign.builder()
-                .errorDecoder(new HelloErrorDecoder())
-                .target(HelloRepository.class, info.getUri());
+    @Override
+    public HelloRepository create(HelloServiceInfo serviceInfo, ServiceConnectorConfig serviceConnectorConfig) {
+        log.debug("creating hello repo wth service info: " + serviceInfo);
+        return new HelloRepositoryFactory().create(serviceInfo);
     }
 }

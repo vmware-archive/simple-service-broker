@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service;
+package io.pivotal.ecosystem.service;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

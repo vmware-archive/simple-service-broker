@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.connector;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.cloudfoundry.CloudFoundryServiceInfoCreator;

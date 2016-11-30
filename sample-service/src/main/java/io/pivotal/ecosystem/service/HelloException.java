@@ -15,15 +15,11 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service;
 
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
+class HelloException extends Exception {
 
-public interface HelloRepository {
-
-    @Headers("Content-Type: application/json")
-    @RequestLine("GET /greeting?username={username}")
-    String greeting(@Param(value = "username") String username);
+    HelloException(String s) {
+        super(s);
+    }
 }

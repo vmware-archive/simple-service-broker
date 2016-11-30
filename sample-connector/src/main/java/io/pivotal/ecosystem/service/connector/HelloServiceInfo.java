@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package io.pivotal.cf.service.connector;
+package io.pivotal.ecosystem.service.connector;
 
 import lombok.Data;
 import org.springframework.cloud.service.ServiceInfo;
