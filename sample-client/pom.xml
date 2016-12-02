@@ -24,7 +24,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.pivotal.cf.broker</groupId>
+            <groupId>io.pivotal.ecosystem</groupId>
             <artifactId>sample-connector</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
