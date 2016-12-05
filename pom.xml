@@ -28,12 +28,6 @@
         <dependencies>
 
             <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-cloudfoundry-service-broker</artifactId>
-                <version>1.0.0.RELEASE</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.16.6</version>
