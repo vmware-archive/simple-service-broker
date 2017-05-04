@@ -20,6 +20,7 @@ package io.pivotal.ecosystem.servicebroker.service;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.model.OperationState;
 
 import java.util.Map;
 
@@ -102,4 +103,6 @@ public interface BrokeredService {
      * @return true if this broker supports asynchronous operations
      */
     boolean isAsync();
+
+    OperationState getServiceStatus(ServiceInstance instance);
 }

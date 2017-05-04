@@ -30,6 +30,8 @@ import java.util.Map;
 @Data
 public class ServiceInstance implements Serializable {
 
+    public static final String DELETE_REQUEST_ID = "DELETE_REQUEST_ID";
+
     public static final long serialVersionUID = 1L;
 
     @JsonSerialize
@@ -55,6 +57,10 @@ public class ServiceInstance implements Serializable {
     @JsonSerialize
     @JsonProperty("parameters")
     private final Map<String, Object> parameters = new HashMap<>();
+
+    @JsonSerialize
+    @JsonProperty("lastOperation")
+    private LastOperation lastOperation = new LastOperation(null, "initial", false);
 
     @JsonSerialize
     @JsonProperty("accepts_incomplete")
@@ -92,6 +98,14 @@ public class ServiceInstance implements Serializable {
         return this.parameters.get(key);
     }
 
+    public LastOperation getLastOperation() {
+        return this.lastOperation;
+    }
+
+    public void setLastOperation(LastOperation lastOperation) {
+        this.lastOperation = lastOperation;
+    }
+
     public CreateServiceInstanceResponse getCreateResponse() {
         CreateServiceInstanceResponse resp = new CreateServiceInstanceResponse();
         resp.withAsync(this.acceptsIncomplete);
@@ -108,5 +122,26 @@ public class ServiceInstance implements Serializable {
         UpdateServiceInstanceResponse resp = new UpdateServiceInstanceResponse();
         resp.withAsync(this.acceptsIncomplete);
         return resp;
+    }
+
+    public boolean inProgress() {
+        if (getLastOperation() == null
+                || getLastOperation().getState() == null) {
+            return false;
+        }
+
+        return getLastOperation().getState().equals(OperationState.IN_PROGRESS);
+    }
+
+    public boolean isCurrentOperationSuccessful() {
+        if (getLastOperation() == null
+                || getLastOperation().getState() == null) {
+            return false;
+        }
+        return getLastOperation().getState().equals(OperationState.SUCCEEDED);
+    }
+
+    public boolean isCurrentOperationDelete() {
+        return getParameters().containsKey(DELETE_REQUEST_ID);
     }
 }

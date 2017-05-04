@@ -88,4 +88,11 @@ public class InstanceServiceTest {
         assertNotNull(instanceService.updateServiceInstance(updateServiceInstanceRequest));
         assertNotNull(instanceService.deleteServiceInstance(deleteServiceInstanceRequest));
     }
+
+    @Test
+    public void testUpdate() {
+
+        instanceService.updateServiceInstance(updateServiceInstanceRequest);
+
+    }
 }

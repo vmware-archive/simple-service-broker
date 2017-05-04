@@ -17,6 +17,7 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
@@ -117,17 +118,57 @@ public class InstanceService implements ServiceInstanceService {
     }
 
     private ServiceInstance getInstance(String id) throws ServiceBrokerException {
-        if (id == null) {
-            throw new ServiceBrokerException("null serviceInstanceId");
+        ServiceInstance instance = (ServiceInstance) instanceTemplate.opsForHash().get(OBJECT_ID, id);
+
+        //if this is not an async broker, we are done
+        if( ! brokeredService.isAsync()) {
+            return instance;
         }
 
-        ServiceInstance si = (ServiceInstance) instanceTemplate.opsForHash().get(OBJECT_ID, id);
-
-        if (si == null) {
-            throw new ServiceInstanceDoesNotExistException(id);
+        // check the last operation
+        LastOperation lo = instance.getLastOperation();
+        if (lo == null || lo.getState() == null) {
+            log.error("ServiceInstance: " + id + " has no last operation.");
+            deleteInstance(instance);
+            return null;
         }
 
-        return si;
+        // if the instance is not in progress just return it.
+        if (! instance.inProgress()) {
+            return instance;
+        }
+
+        // if still in progress, let's check up on things...
+        String currentRequestId = lo.getDescription();
+        if (currentRequestId == null) {
+            log.error("ServiceInstance: " + id + " last operation has no id.");
+            deleteInstance(instance);
+            return null;
+        }
+
+        log.info("service instance id: " + id + " request id: "
+                + currentRequestId + " is in state: " + lo.getState());
+
+        log.info("checking on status of request id: " + currentRequestId);
+        OperationState currentState = null;
+        try {
+            currentState = brokeredService.getServiceStatus(instance);
+            log.info("request: " + id + " status is: " + currentState.getValue());
+        } catch (ServiceBrokerException e) {
+            log.error("unable to get status of request: " + id, e);
+            throw e;
+        }
+
+        lo.setState(currentState);
+        instance.setLastOperation(lo);
+
+        // if this is a delete request and was successful, remove the instance
+        if (instance.isCurrentOperationSuccessful()
+                && instance.isCurrentOperationDelete()) {
+            return deleteInstance(instance);
+        }
+
+        return saveInstance(instance);
     }
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {

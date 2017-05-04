@@ -14,7 +14,7 @@
     <groupId>io.pivotal.ecosystem</groupId>
     <artifactId>simple-broker</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <description>A library that simplifies the creation of spring boot cloud foundry service brokers.</description>
     <url>https://github.com/cf-platform-eng/simple-service-broker</url>
 

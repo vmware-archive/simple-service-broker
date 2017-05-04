@@ -20,6 +20,7 @@ package io.pivotal.ecosystem.servicebroker.service;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.model.OperationState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,5 +57,10 @@ public class DefaultServiceImpl implements BrokeredService {
     @Override
     public boolean isAsync() {
         return false;
+    }
+
+    @Override
+    public OperationState getServiceStatus(ServiceInstance instance) {
+        return OperationState.IN_PROGRESS;
     }
 }
