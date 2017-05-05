@@ -1,18 +1,18 @@
 /**
- Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
-
- This program and the accompanying materials are made available under
- the terms of the under the Apache License, Version 2.0 (the "License”);
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * <p>
+ * This program and the accompanying materials are made available under
+ * the terms of the under the Apache License, Version 2.0 (the "License”);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.pivotal.ecosystem.servicebroker.service;
@@ -27,7 +27,6 @@ import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindin
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -36,19 +35,17 @@ import java.util.Map;
 @Slf4j
 public class BindingService implements ServiceInstanceBindingService {
 
-    private static final String OBJECT_ID = "binding";
-
-    public BindingService(InstanceService instanceService, BrokeredService brokeredService, RedisTemplate<String, ServiceBinding> bindingTemplate) {
+    public BindingService(InstanceService instanceService, BrokeredService brokeredService, ServiceBindingRepository serviceBindingRepository) {
         this.instanceService = instanceService;
         this.brokeredService = brokeredService;
-        this.bindingTemplate = bindingTemplate;
+        this.serviceBindingRepository = serviceBindingRepository;
     }
 
     private InstanceService instanceService;
 
     private BrokeredService brokeredService;
 
-    private RedisTemplate<String, ServiceBinding> bindingTemplate;
+    private ServiceBindingRepository serviceBindingRepository;
 
     @Override
     public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) throws ServiceBrokerException {
@@ -70,7 +67,7 @@ public class BindingService implements ServiceInstanceBindingService {
         binding.getCredentials().putAll(creds);
 
         log.info("saving binding: " + request.getBindingId());
-        bindingTemplate.opsForHash().put(OBJECT_ID, request.getBindingId(), binding);
+        serviceBindingRepository.save(binding);
 
         return binding.getCreateResponse();
     }
@@ -95,7 +92,7 @@ public class BindingService implements ServiceInstanceBindingService {
         brokeredService.deleteBinding(si, binding);
 
         log.info("deleting binding for service instance: " + request.getBindingId() + " service instance: " + request.getServiceInstanceId());
-        bindingTemplate.opsForHash().delete(OBJECT_ID, binding.getId());
+        serviceBindingRepository.delete(binding.getId());
     }
 
     private ServiceBinding getBinding(String id) throws ServiceBrokerException {
@@ -103,7 +100,7 @@ public class BindingService implements ServiceInstanceBindingService {
             throw new ServiceBrokerException("null serviceBindingId");
         }
 
-        ServiceBinding sb = (ServiceBinding) bindingTemplate.opsForHash().get(OBJECT_ID, id);
+        ServiceBinding sb = serviceBindingRepository.findOne(id);
 
         if (sb == null) {
             throw new ServiceInstanceBindingDoesNotExistException(id);

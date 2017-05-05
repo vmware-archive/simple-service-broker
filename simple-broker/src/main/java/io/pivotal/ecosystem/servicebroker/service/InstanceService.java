@@ -1,18 +1,18 @@
 /**
- Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
-
- This program and the accompanying materials are made available under
- the terms of the under the Apache License, Version 2.0 (the "License”);
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+ * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * <p>
+ * This program and the accompanying materials are made available under
+ * the terms of the under the Apache License, Version 2.0 (the "License”);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.pivotal.ecosystem.servicebroker.service;
@@ -26,26 +26,23 @@ import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotE
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class InstanceService implements ServiceInstanceService {
 
-    public static final String OBJECT_ID = "Instance";
-
-    public InstanceService(CatalogService catalogService, BrokeredService brokeredService, RedisTemplate<String, ServiceInstance> instanceTemplate) {
+    public InstanceService(CatalogService catalogService, BrokeredService brokeredService, ServiceInstanceRepository serviceInstanceRepository) {
         this.catalogService = catalogService;
         this.brokeredService = brokeredService;
-        this.instanceTemplate = instanceTemplate;
+        this.serviceInstanceRepository = serviceInstanceRepository;
     }
 
     private CatalogService catalogService;
 
     private BrokeredService brokeredService;
 
-    private RedisTemplate<String, ServiceInstance> instanceTemplate;
+    private ServiceInstanceRepository serviceInstanceRepository;
 
     ServiceInstance getServiceInstance(String id) {
         if (id == null || getInstance(id) == null) {
@@ -75,6 +72,12 @@ public class InstanceService implements ServiceInstanceService {
 
         log.info("creating service instance: " + request.getServiceInstanceId() + " service definition: " + request.getServiceDefinitionId());
         ServiceInstance instance = new ServiceInstance(request);
+        if (brokeredService.isAsync()) {
+            instance.setAcceptsIncomplete(true);
+        } else {
+            instance.setAcceptsIncomplete(false);
+        }
+
         brokeredService.createInstance(instance);
         saveInstance(instance);
 
@@ -118,10 +121,10 @@ public class InstanceService implements ServiceInstanceService {
     }
 
     private ServiceInstance getInstance(String id) throws ServiceBrokerException {
-        ServiceInstance instance = (ServiceInstance) instanceTemplate.opsForHash().get(OBJECT_ID, id);
+        ServiceInstance instance = serviceInstanceRepository.findOne(id);
 
         //if this is not an async broker, we are done
-        if( ! brokeredService.isAsync()) {
+        if (!brokeredService.isAsync()) {
             return instance;
         }
 
@@ -134,7 +137,7 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         // if the instance is not in progress just return it.
-        if (! instance.inProgress()) {
+        if (!instance.inProgress()) {
             return instance;
         }
 
@@ -173,13 +176,13 @@ public class InstanceService implements ServiceInstanceService {
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
         log.info("deleting service instance from repo: " + instance.getId());
-        instanceTemplate.opsForHash().delete(OBJECT_ID, instance.getId());
+        serviceInstanceRepository.delete(instance.getId());
         return instance;
     }
 
     private ServiceInstance saveInstance(io.pivotal.ecosystem.servicebroker.model.ServiceInstance instance) {
         log.info("saving service instance to repo: " + instance.getId());
-        instanceTemplate.opsForHash().put(OBJECT_ID, instance.getId(), instance);
+        serviceInstanceRepository.save(instance);
         return instance;
     }
 }

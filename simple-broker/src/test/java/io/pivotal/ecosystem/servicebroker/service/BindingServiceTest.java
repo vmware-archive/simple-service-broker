@@ -17,7 +17,6 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
-import io.pivotal.ecosystem.servicebroker.TestConfig;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Test;
@@ -88,15 +87,15 @@ public class BindingServiceTest {
             }
         }).when(hashOperations).put(anyString(), anyString(), any(ServiceBinding.class));
 
-        given(instanceService.getServiceInstance(TestConfig.SI_ID))
-                .willReturn(serviceInstance);
+//        given(instanceService.getServiceInstance("foo")
+//                .willReturn(serviceInstance);
 
         CreateServiceInstanceAppBindingResponse cresp = (CreateServiceInstanceAppBindingResponse)
                 bindingService.createServiceInstanceBinding(createServiceInstanceBindingRequest);
         assertNotNull(cresp);
         assertNotNull(cresp.getCredentials());
 
-        when(hashOperations.get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get(TestConfig.SB_ID));
+        when(hashOperations.get(Matchers.anyString(), Matchers.anyString())).thenReturn(fakeRepo.get("foo"));
 
         bindingService.deleteServiceInstanceBinding(deleteBindingRequest);
     }
