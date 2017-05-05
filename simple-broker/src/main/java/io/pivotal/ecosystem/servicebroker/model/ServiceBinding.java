@@ -65,8 +65,13 @@ public class ServiceBinding implements Serializable {
     @JsonProperty("credentials")
     private final Map<String, Object> credentials = new HashMap<>();
 
+    public ServiceBinding() {
+        super();
+    }
+
     //TODO deal with stuff in response bodies
     public ServiceBinding(CreateServiceInstanceBindingRequest request) {
+        this();
         this.id = request.getBindingId();
         this.serviceId = request.getServiceDefinitionId();
         this.planId = request.getPlanId();

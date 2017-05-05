@@ -17,8 +17,6 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
-import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
-import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,9 +31,7 @@ import java.util.Map;
 @EnableRedisRepositories
 public class TestConfig {
 
-    private static final String SB_ID = "sbId";
     static final String SD_ID = "aUniqueId";
-
     private static final String PLAN_ID = "anotherUniqueId";
     private static final String APP_GUID = "anAppGuid";
     private static final String ORG_GUID = "anOrgGuid";
@@ -44,12 +40,6 @@ public class TestConfig {
     @Bean
     public CatalogService catalogService() {
         return new CatalogService();
-    }
-
-    @Bean
-    public InstanceService instanceService(CatalogService catalogService, BrokeredService brokeredService,
-                                           ServiceInstanceRepository serviceInstanceRepository) {
-        return new InstanceService(catalogService, brokeredService, serviceInstanceRepository);
     }
 
     @Bean
@@ -70,13 +60,13 @@ public class TestConfig {
     }
 
     @Bean
-    public String serviceInstanceId() {
-        return "sid" + System.currentTimeMillis();
+    public String serviceBindingId() {
+        return "sbd" + System.currentTimeMillis();
     }
 
     @Bean
-    public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
-        return new ServiceInstance(req);
+    public String serviceInstanceId() {
+        return "sid" + System.currentTimeMillis();
     }
 
     private Map<String, Object> getBindResources() {
@@ -93,22 +83,17 @@ public class TestConfig {
     }
 
     @Bean
-    public CreateServiceInstanceBindingRequest createBindingRequest(String serviceInstanceId) {
+    public CreateServiceInstanceBindingRequest createBindingRequest(String serviceInstanceId, String serviceBindingId) {
         CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID,
                 getBindResources(), getParameters());
-        req.withBindingId(SB_ID);
+        req.withBindingId(serviceBindingId);
         req.withServiceInstanceId(serviceInstanceId);
         return req;
     }
 
     @Bean
-    public ServiceBinding serviceBinding(CreateServiceInstanceBindingRequest req) {
-        return new ServiceBinding(req);
-    }
-
-    @Bean
-    public DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId) {
-        return new DeleteServiceInstanceBindingRequest(serviceInstanceId, SB_ID, SD_ID, PLAN_ID,
+    public DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId, String serviceBindingId) {
+        return new DeleteServiceInstanceBindingRequest(serviceInstanceId, serviceBindingId, SD_ID, PLAN_ID,
                 catalogService().getServiceDefinition(SD_ID));
     }
 
