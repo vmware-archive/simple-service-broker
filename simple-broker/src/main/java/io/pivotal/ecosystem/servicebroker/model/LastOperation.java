@@ -17,13 +17,17 @@
 
 package io.pivotal.ecosystem.servicebroker.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.cloud.servicebroker.model.GetLastServiceOperationResponse;
 import org.springframework.cloud.servicebroker.model.OperationState;
 
 import java.io.Serializable;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class LastOperation implements Serializable {
 
     public static final long serialVersionUID = 1L;

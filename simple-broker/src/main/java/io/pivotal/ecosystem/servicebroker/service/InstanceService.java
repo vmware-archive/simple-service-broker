@@ -20,9 +20,9 @@ package io.pivotal.ecosystem.servicebroker.service;
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceDefinitionDoesNotExistException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
@@ -44,28 +44,18 @@ public class InstanceService implements ServiceInstanceService {
 
     private ServiceInstanceRepository serviceInstanceRepository;
 
-    ServiceInstance getServiceInstance(String id) {
-        if (id == null || getInstance(id) == null) {
-            log.warn("service instance with id: " + id + " not found!");
-            return null;
-        }
-
-        return getInstance(id);
-    }
-
     @Override
     public CreateServiceInstanceResponse createServiceInstance(CreateServiceInstanceRequest request) {
+        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null) {
+            throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceDefinitionId());
+        }
 
-        try {
-            if (getInstance(request.getServiceInstanceId()) != null) {
-                throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceInstanceId());
-            }
-        } catch (ServiceInstanceDoesNotExistException e) {
-            //ok, don't have this instance, keep going
+        //make sure that if this is an async broker this is an async request
+        if (brokeredService.isAsync() && !request.isAsyncAccepted()) {
+            throw new ServiceBrokerAsyncRequiredException("This broker only accepts async requests.");
         }
 
         ServiceDefinition sd = catalogService.getServiceDefinition(request.getServiceDefinitionId());
-
         if (sd == null) {
             throw new ServiceDefinitionDoesNotExistException(request.getServiceDefinitionId());
         }
@@ -79,6 +69,12 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         brokeredService.createInstance(instance);
+        if (brokeredService.isAsync()) {
+            instance.setLastOperation(new LastOperation(OperationState.IN_PROGRESS, request.getServiceInstanceId(), false));
+        } else {
+            instance.setLastOperation(new LastOperation(OperationState.SUCCEEDED, request.getServiceInstanceId(), false));
+        }
+
         saveInstance(instance);
 
         log.info("registered service instance: " + request.getServiceInstanceId());
@@ -87,15 +83,14 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public GetLastServiceOperationResponse getLastOperation(GetLastServiceOperationRequest getLastServiceOperationRequest) {
-        //TODO deal with Async
-        return null;
+        return getServiceInstance(getLastServiceOperationRequest.getServiceInstanceId()).getLastOperation().toResponse();
     }
 
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
 
         log.info("starting service instance delete: " + request.getServiceInstanceId());
-        ServiceInstance instance = getInstance(request.getServiceInstanceId());
+        ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
         brokeredService.deleteInstance(instance);
         deleteInstance(instance);
 
@@ -106,7 +101,7 @@ public class InstanceService implements ServiceInstanceService {
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
         log.info("starting service instance update: " + request.getServiceInstanceId());
-        ServiceInstance originalInstance = getInstance(request.getServiceInstanceId());
+        ServiceInstance originalInstance = getServiceInstance(request.getServiceInstanceId());
         ServiceInstance updatedInstance = new ServiceInstance(request);
 
         originalInstance.setServiceId(updatedInstance.getServiceId());
@@ -120,7 +115,7 @@ public class InstanceService implements ServiceInstanceService {
         return originalInstance.getUpdateResponse();
     }
 
-    private ServiceInstance getInstance(String id) throws ServiceBrokerException {
+    public ServiceInstance getServiceInstance(String id) throws ServiceBrokerException {
         ServiceInstance instance = serviceInstanceRepository.findOne(id);
 
         //if this is not an async broker, we are done

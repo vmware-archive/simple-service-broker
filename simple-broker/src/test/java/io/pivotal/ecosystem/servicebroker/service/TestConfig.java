@@ -17,6 +17,7 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,10 +33,10 @@ import java.util.Map;
 public class TestConfig {
 
     static final String SD_ID = "aUniqueId";
-    private static final String PLAN_ID = "anotherUniqueId";
-    private static final String APP_GUID = "anAppGuid";
-    private static final String ORG_GUID = "anOrgGuid";
-    private static final String SPACE_GUID = "aSpaceGuid";
+    static final String PLAN_ID = "anotherUniqueId";
+    static final String APP_GUID = "anAppGuid";
+    static final String ORG_GUID = "anOrgGuid";
+    static final String SPACE_GUID = "aSpaceGuid";
 
     @Bean
     public CatalogService catalogService() {
@@ -52,10 +53,22 @@ public class TestConfig {
         return new DefaultServiceImpl();
     }
 
+    @Autowired
+    private ServiceInstanceRepository serviceInstanceRepository;
+
     @Bean
     public CreateServiceInstanceRequest createServiceInstanceRequest(String serviceInstanceId) {
         CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
         req.withServiceInstanceId(serviceInstanceId);
+        req.withAsyncAccepted(false);
+        return req;
+    }
+
+    @Bean
+    public CreateServiceInstanceRequest createServiceInstanceRequestAsync(String serviceInstanceId) {
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
+        req.withServiceInstanceId(serviceInstanceId);
+        req.withAsyncAccepted(true);
         return req;
     }
 
@@ -75,7 +88,7 @@ public class TestConfig {
         return m;
     }
 
-    private Map<String, Object> getParameters() {
+    static Map<String, Object> getParameters() {
         Map<String, Object> m = new HashMap<>();
         m.put("foo", "bar");
         m.put("bizz", "bazz");
@@ -102,6 +115,16 @@ public class TestConfig {
         UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
         req.withServiceDefinition(catalogService().getServiceDefinition(SD_ID));
         req.withServiceInstanceId(serviceInstanceId);
+        req.withAsyncAccepted(false);
+        return req;
+    }
+
+    @Bean
+    UpdateServiceInstanceRequest updateServiceInstanceRequestAsync(String serviceInstanceId) {
+        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
+        req.withServiceDefinition(catalogService().getServiceDefinition(SD_ID));
+        req.withServiceInstanceId(serviceInstanceId);
+        req.withAsyncAccepted(true);
         return req;
     }
 
@@ -109,6 +132,20 @@ public class TestConfig {
     DeleteServiceInstanceRequest deleteServiceInstanceRequest(String serviceInstanceId) {
         DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(serviceInstanceId, SD_ID, PLAN_ID,
                 catalogService().getServiceDefinition(SD_ID));
+        req.withAsyncAccepted(false);
         return req;
+    }
+
+    @Bean
+    DeleteServiceInstanceRequest deleteServiceInstanceRequestAsync(String serviceInstanceId) {
+        DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(serviceInstanceId, SD_ID, PLAN_ID,
+                catalogService().getServiceDefinition(SD_ID));
+        req.withAsyncAccepted(true);
+        return req;
+    }
+
+    @Bean
+    public GetLastServiceOperationRequest getLastServiceOperationRequest(String serviceInstanceId) {
+        return new GetLastServiceOperationRequest(serviceInstanceId);
     }
 }
