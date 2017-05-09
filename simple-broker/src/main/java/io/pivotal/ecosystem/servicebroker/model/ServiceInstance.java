@@ -142,14 +142,10 @@ public class ServiceInstance implements Serializable {
     }
 
     public boolean isCurrentOperationSuccessful() {
-        if (getLastOperation() == null
-                || getLastOperation().getState() == null) {
-            return false;
-        }
         return getLastOperation().getState().equals(OperationState.SUCCEEDED);
     }
 
     public boolean isCurrentOperationDelete() {
-        return getParameters().containsKey(DELETE_REQUEST_ID);
+        return getLastOperation().getIsDelete();
     }
 }

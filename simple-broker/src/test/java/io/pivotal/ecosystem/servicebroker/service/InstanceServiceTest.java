@@ -72,7 +72,7 @@ public class InstanceServiceTest {
     }
 
     @Test
-    public void testInstance() throws ServiceBrokerException {
+    public void testHappyLife() throws ServiceBrokerException {
         InstanceService service = instanceServiceSync();
 
         assertNull(serviceInstanceRepository.findOne(createServiceInstanceRequest.getServiceInstanceId()));
@@ -111,7 +111,6 @@ public class InstanceServiceTest {
         service.updateServiceInstance(updateServiceInstanceRequestAsync);
         service.deleteServiceInstance(deleteServiceInstanceRequestAsync);
     }
-
     @Test
     public void testDuplicateCreate() {
         InstanceService service = instanceServiceSync();
@@ -134,4 +133,5 @@ public class InstanceServiceTest {
 
         service.deleteServiceInstance(dreq);
     }
+
 }

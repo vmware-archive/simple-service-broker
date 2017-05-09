@@ -68,11 +68,15 @@ public class InstanceService implements ServiceInstanceService {
             instance.setAcceptsIncomplete(false);
         }
 
-        brokeredService.createInstance(instance);
-        if (brokeredService.isAsync()) {
-            instance.setLastOperation(new LastOperation(OperationState.IN_PROGRESS, request.getServiceInstanceId(), false));
-        } else {
-            instance.setLastOperation(new LastOperation(OperationState.SUCCEEDED, request.getServiceInstanceId(), false));
+        try {
+            brokeredService.createInstance(instance);
+            if (brokeredService.isAsync()) {
+                instance.setLastOperation(new LastOperation(OperationState.IN_PROGRESS, request.getServiceInstanceId(), false));
+            } else {
+                instance.setLastOperation(new LastOperation(OperationState.SUCCEEDED, request.getServiceInstanceId(), false));
+            }
+        } catch (ServiceBrokerException e) {
+            instance.setLastOperation(new LastOperation(OperationState.FAILED, request.getServiceInstanceId(), false));
         }
 
         saveInstance(instance);
@@ -83,18 +87,37 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public GetLastServiceOperationResponse getLastOperation(GetLastServiceOperationRequest getLastServiceOperationRequest) {
-        return getServiceInstance(getLastServiceOperationRequest.getServiceInstanceId()).getLastOperation().toResponse();
+        return serviceInstanceRepository.findOne(getLastServiceOperationRequest.getServiceInstanceId()).getLastOperation().toResponse();
     }
 
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
-
         log.info("starting service instance delete: " + request.getServiceInstanceId());
         ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
-        brokeredService.deleteInstance(instance);
-        deleteInstance(instance);
 
-        log.info("deleted service instance: " + request.getServiceInstanceId());
+        try {
+            brokeredService.deleteInstance(instance);
+
+            //if ok and async set to in progress
+            if (brokeredService.isAsync()) {
+                instance.getLastOperation().setState(OperationState.IN_PROGRESS);
+                instance.getLastOperation().setIsDelete(true);
+                serviceInstanceRepository.save(instance);
+            }
+
+        } catch (ServiceBrokerException e) {
+            if (brokeredService.isAsync()) {
+                instance.getLastOperation().setState(OperationState.FAILED);
+                instance.getLastOperation().setIsDelete(true);
+                serviceInstanceRepository.save(instance);
+            }
+
+        }
+
+        if (!brokeredService.isAsync()) {
+            deleteInstance(instance);
+        }
+
         return instance.getDeleteResponse();
     }
 
@@ -108,7 +131,17 @@ public class InstanceService implements ServiceInstanceService {
         originalInstance.setPlanId(updatedInstance.getPlanId());
         originalInstance.getParameters().putAll(updatedInstance.getParameters());
 
-        brokeredService.updateInstance(originalInstance);
+        try {
+            brokeredService.updateInstance(originalInstance);
+            if (brokeredService.isAsync()) {
+                originalInstance.setLastOperation(new LastOperation(OperationState.IN_PROGRESS, request.getServiceInstanceId(), false));
+            } else {
+                originalInstance.setLastOperation(new LastOperation(OperationState.SUCCEEDED, request.getServiceInstanceId(), false));
+            }
+        } catch (ServiceBrokerException e) {
+            originalInstance.setLastOperation(new LastOperation(OperationState.FAILED, request.getServiceInstanceId(), false));
+        }
+
         saveInstance(originalInstance);
 
         log.info("updated service instance: " + request.getServiceInstanceId());
@@ -118,47 +151,27 @@ public class InstanceService implements ServiceInstanceService {
     public ServiceInstance getServiceInstance(String id) throws ServiceBrokerException {
         ServiceInstance instance = serviceInstanceRepository.findOne(id);
 
-        //if this is not an async broker, we are done
+        //if this is not an async broker, we can just return the instance
         if (!brokeredService.isAsync()) {
             return instance;
         }
 
-        // check the last operation
-        LastOperation lo = instance.getLastOperation();
-        if (lo == null || lo.getState() == null) {
-            log.error("ServiceInstance: " + id + " has no last operation.");
-            deleteInstance(instance);
-            return null;
-        }
+        //async then...
 
-        // if the instance is not in progress just return it.
-        if (!instance.inProgress()) {
+        //if last state is not in progress we can return (no need to check up on progress)
+        if (instance.getLastOperation().getState() != OperationState.IN_PROGRESS) {
             return instance;
         }
 
-        // if still in progress, let's check up on things...
-        String currentRequestId = lo.getDescription();
-        if (currentRequestId == null) {
-            log.error("ServiceInstance: " + id + " last operation has no id.");
-            deleteInstance(instance);
-            return null;
-        }
-
-        log.info("service instance id: " + id + " request id: "
-                + currentRequestId + " is in state: " + lo.getState());
-
-        log.info("checking on status of request id: " + currentRequestId);
-        OperationState currentState = null;
+        //let's check up on things
+        log.info("checking on status of request id: " + instance.getLastOperation().getDescription());
         try {
-            currentState = brokeredService.getServiceStatus(instance);
-            log.info("request: " + id + " status is: " + currentState.getValue());
+            instance.getLastOperation().setState(brokeredService.getServiceStatus(instance));
+            log.info("request: " + id + " status is: " + instance.getLastOperation().getState().getValue());
         } catch (ServiceBrokerException e) {
             log.error("unable to get status of request: " + id, e);
-            throw e;
+            instance.getLastOperation().setState(OperationState.FAILED);
         }
-
-        lo.setState(currentState);
-        instance.setLastOperation(lo);
 
         // if this is a delete request and was successful, remove the instance
         if (instance.isCurrentOperationSuccessful()

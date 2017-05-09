@@ -17,6 +17,7 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,12 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -72,35 +74,76 @@ public class InstanceServiceAsyncTest {
     }
 
     @Test
-    public void testInstance() throws ServiceBrokerException {
+    public void testHappyLifeCycle() throws ServiceBrokerException {
         InstanceService service = instanceServiceAsync();
+
+        //grab an id to use throughout
         String id = createServiceInstanceRequestAsync.getServiceInstanceId();
 
+        //nothing there to begin with
         assertNull(serviceInstanceRepository.findOne(id));
 
+        //create an instance
         CreateServiceInstanceResponse csir = service.createServiceInstance(createServiceInstanceRequestAsync);
         assertNotNull(csir);
 
-        assertNotNull(serviceInstanceRepository.findOne(id));
+        ServiceInstance si = serviceInstanceRepository.findOne(id);
+        assertNotNull(si);
 
+        //state should be in progress
         GetLastServiceOperationResponse glosr = service.getLastOperation(getLastServiceOperationRequest);
         assertNotNull(glosr);
         assertEquals(OperationState.IN_PROGRESS, glosr.getState());
+        assertFalse(glosr.isDeleteOperation());
 
-        ServiceInstance si = service.getServiceInstance(id);
-        assertNotNull(si);
+        //force it to succeeded
+        si.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstanceRepository.save(si);
+        si = serviceInstanceRepository.findOne(id);
 
+        glosr = service.getLastOperation(getLastServiceOperationRequest);
+        assertNotNull(glosr);
+        assertEquals(OperationState.SUCCEEDED, glosr.getState());
+        assertFalse(glosr.isDeleteOperation());
+
+        //update service
         UpdateServiceInstanceResponse usir = service.updateServiceInstance(updateServiceInstanceRequestAsync.withServiceInstanceId(id));
         assertNotNull(usir);
 
+        //state should be in progress
+        glosr = service.getLastOperation(getLastServiceOperationRequest);
+        assertNotNull(glosr);
+        assertEquals(OperationState.IN_PROGRESS, glosr.getState());
+        assertFalse(glosr.isDeleteOperation());
+
+        si = service.getServiceInstance(id);
+        assertNotNull(si);
+
+        //force it to succeeded
+        si.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstanceRepository.save(si);
+        si = serviceInstanceRepository.findOne(id);
+        assertNotNull(si);
+
+        //delete service
         DeleteServiceInstanceResponse dsir = service.deleteServiceInstance(deleteServiceInstanceRequestAsync);
         assertNotNull(dsir);
 
+        //state should be in progress
+        glosr = service.getLastOperation(getLastServiceOperationRequest);
+        assertNotNull(glosr);
+        assertEquals(OperationState.IN_PROGRESS, glosr.getState());
+        assertTrue(glosr.isDeleteOperation());
+
+        //it should be deleted once we ask for it again
+        si = service.getServiceInstance(id);
+        assertNotNull(si);
+        assertEquals(OperationState.SUCCEEDED, si.getLastOperation().getState());
         assertNull(serviceInstanceRepository.findOne(id));
     }
 
     @Test
-    public void testSyncService() {
+    public void testAsynchServiceWithSyncRequest() {
         InstanceService service = instanceServiceAsync();
 
         exception.expect(ServiceBrokerAsyncRequiredException.class);
@@ -113,14 +156,113 @@ public class InstanceServiceAsyncTest {
         service.deleteServiceInstance(deleteServiceInstanceRequest);
     }
 
-//    @Test
-//    public void testUpdateWhileInProgress() {
-//        fail();
-//    }
-//
-//    @Test
-//    public void testDeleteWhileInProgress() {
-//        fail();
-//    }
+    @Test
+    public void testDuplicateCreate() {
+        InstanceService service = instanceServiceAsync();
+        String id = "deleteme";
 
+        if (serviceInstanceRepository.findOne(id) != null) {
+            serviceInstanceRepository.delete(id);
+        }
+
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
+        req.withServiceInstanceId(id);
+        req.withAsyncAccepted(true);
+
+        service.createServiceInstance(req);
+
+        exception.expect(ServiceInstanceExistsException.class);
+        service.createServiceInstance(req);
+
+        ServiceInstance si = serviceInstanceRepository.findOne(id);
+        si.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstanceRepository.save(si);
+
+        DeleteServiceInstanceRequest dreq = new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID,
+                catalogService.getServiceDefinition(TestConfig.SD_ID));
+
+        service.deleteServiceInstance(dreq);
+    }
+
+    @Test
+    public void testUpdateWhileInProgress() {
+        fail();
+    }
+
+    @Test
+    public void testDeleteWhileInProgress() {
+        fail();
+    }
+
+    @Test
+    public void testThatFailedCreateCanBeDeleted() {
+        fail();
+    }
+
+    @Test
+    public void testThatFailedUpdateIsNotDeleted() {
+        fail();
+    }
+
+    @Test
+    public void testFailedCreate() {
+        fail();
+    }
+
+    @Test
+    public void testFailedUpdate() {
+        fail();
+    }
+
+    @Test
+    public void testFailedDelete() {
+
+    }
+
+    @Test
+    public void testLastOperationCRUD() {
+        InstanceService service = instanceServiceAsync();
+        String id = "deleteme";
+
+        if (serviceInstanceRepository.findOne(id) != null) {
+            serviceInstanceRepository.delete(id);
+        }
+
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
+        req.withServiceInstanceId(id);
+        req.withAsyncAccepted(true);
+
+        service.createServiceInstance(req);
+        ServiceInstance si = serviceInstanceRepository.findOne(id);
+        LastOperation lo = si.getLastOperation();
+        assertNotNull(lo);
+        assertEquals(OperationState.IN_PROGRESS, lo.getState());
+        assertFalse(lo.getIsDelete());
+
+        GetLastServiceOperationRequest glsoreq = new GetLastServiceOperationRequest(id);
+        GetLastServiceOperationResponse glsoresp = service.getLastOperation(glsoreq);
+        assertNotNull(glsoresp);
+        assertEquals(OperationState.IN_PROGRESS, glsoresp.getState());
+        assertFalse(glsoresp.isDeleteOperation());
+
+        si.getLastOperation().setState(OperationState.SUCCEEDED);
+        si.getLastOperation().setIsDelete(true);
+        serviceInstanceRepository.save(si);
+
+        si = serviceInstanceRepository.findOne(id);
+        lo = si.getLastOperation();
+        assertNotNull(lo);
+        assertEquals(OperationState.SUCCEEDED, lo.getState());
+        assertTrue(lo.getIsDelete());
+
+        glsoresp = service.getLastOperation(glsoreq);
+        assertNotNull(glsoresp);
+        assertEquals(OperationState.SUCCEEDED, glsoresp.getState());
+        assertTrue(glsoresp.isDeleteOperation());
+
+        DeleteServiceInstanceRequest dreq = new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID,
+                catalogService.getServiceDefinition(TestConfig.SD_ID));
+
+        service.deleteServiceInstance(dreq);
+    }
 }
