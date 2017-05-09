@@ -18,6 +18,7 @@
 package io.pivotal.ecosystem.servicebroker.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,11 +47,6 @@ public class TestConfig {
     @Bean
     public RedisConnectionFactory connectionFactory() {
         return new JedisConnectionFactory();
-    }
-
-    @Bean
-    public BrokeredService brokeredService() {
-        return new DefaultServiceImpl();
     }
 
     @Autowired
@@ -148,4 +144,7 @@ public class TestConfig {
     public GetLastServiceOperationRequest getLastServiceOperationRequest(String serviceInstanceId) {
         return new GetLastServiceOperationRequest(serviceInstanceId);
     }
+
+    @MockBean
+    private DefaultServiceImpl mockDefaultServiceImpl;
 }

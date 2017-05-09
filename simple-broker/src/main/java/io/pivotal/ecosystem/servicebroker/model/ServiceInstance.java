@@ -146,6 +146,6 @@ public class ServiceInstance implements Serializable {
     }
 
     public boolean isCurrentOperationDelete() {
-        return getLastOperation().getIsDelete();
+        return getLastOperation().getOperation().equals(Operation.DELETE);
     }
 }

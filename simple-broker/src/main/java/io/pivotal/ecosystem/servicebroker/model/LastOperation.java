@@ -32,23 +32,18 @@ public class LastOperation implements Serializable {
 
     public static final long serialVersionUID = 1L;
 
+    private Operation operation;
     private OperationState state;
-    private String description;
-    private Boolean isDelete;
-
-    public static LastOperation fromResponse(GetLastServiceOperationResponse response) {
-        LastOperation lo = new LastOperation();
-        lo.setState(response.getState());
-        lo.setDescription(response.getDescription());
-        lo.setIsDelete(response.isDeleteOperation());
-
-        return lo;
-    }
+    private String id;
 
     public GetLastServiceOperationResponse toResponse() {
         return new GetLastServiceOperationResponse().
-                withDescription(getDescription()).
+                withDescription(getId()).
                 withOperationState(getState()).
-                withDeleteOperation(getIsDelete());
+                withDeleteOperation(isDelete());
+    }
+
+    private boolean isDelete() {
+        return Operation.DELETE.equals(operation);
     }
 }
