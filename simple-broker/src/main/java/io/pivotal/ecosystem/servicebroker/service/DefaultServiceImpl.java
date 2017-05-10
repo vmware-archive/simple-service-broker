@@ -17,6 +17,8 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
+import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
@@ -28,29 +30,38 @@ import java.util.Map;
 public class DefaultServiceImpl implements BrokeredService {
 
     @Override
-    public void createInstance(ServiceInstance instance) throws ServiceBrokerException {
+    public LastOperation createInstance(ServiceInstance instance) {
+        instance.getLastOperation().setOperation(Operation.CREATE);
+        return instance.getLastOperation();
     }
 
     @Override
-    public void deleteInstance(ServiceInstance instance) throws ServiceBrokerException {
+    public LastOperation deleteInstance(ServiceInstance instance) {
+        instance.getLastOperation().setOperation(Operation.DELETE);
+        return instance.getLastOperation();
     }
 
     @Override
-    public void updateInstance(ServiceInstance instance) throws ServiceBrokerException {
+    public LastOperation updateInstance(ServiceInstance instance) {
+        instance.getLastOperation().setOperation(Operation.UPDATE);
+        return instance.getLastOperation();
     }
 
     @Override
-    public void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
+    public LastOperation createBinding(ServiceInstance instance, ServiceBinding binding) {
+        instance.getLastOperation().setOperation(Operation.BIND);
+        return instance.getLastOperation();
 
     }
 
     @Override
-    public void deleteBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-
+    public LastOperation deleteBinding(ServiceInstance instance, ServiceBinding binding) {
+        instance.getLastOperation().setOperation(Operation.UNBIND);
+        return instance.getLastOperation();
     }
 
     @Override
-    public Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
+    public Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) {
         return new HashMap<>();
     }
 
@@ -60,7 +71,7 @@ public class DefaultServiceImpl implements BrokeredService {
     }
 
     @Override
-    public OperationState getServiceStatus(ServiceInstance instance) {
-        return OperationState.SUCCEEDED;
+    public LastOperation getServiceStatus(ServiceInstance instance) {
+        return instance.getLastOperation();
     }
 }

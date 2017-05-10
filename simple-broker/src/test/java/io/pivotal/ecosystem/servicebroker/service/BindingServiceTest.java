@@ -17,16 +17,23 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
+import io.pivotal.ecosystem.servicebroker.model.Operation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.model.*;
+import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
+import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -36,40 +43,48 @@ public class BindingServiceTest {
     private BindingService bindingService;
 
     @Autowired
+    private CatalogService catalogService;
+
+    @Autowired
     private ServiceBindingRepository serviceBindingRepository;
 
     @Autowired
-    private CreateServiceInstanceBindingRequest createServiceInstanceBindingRequest;
+    private ServiceInstanceRepository serviceInstanceRepository;
 
     @Autowired
-    private CreateServiceInstanceRequest createServiceInstanceRequest;
+    private DefaultServiceImpl mockDefaultServiceImpl;
 
-    @Autowired
-    private DeleteServiceInstanceBindingRequest deleteBindingRequest;
-
-    @Autowired
-    private DeleteServiceInstanceRequest deleteServiceInstanceRequest;
-
-    @Autowired
-    private InstanceService instanceService;
+    private InstanceService instanceService() {
+        return new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository);
+    }
 
     @Test
     public void testBinding() throws ServiceBrokerException {
-        instanceService.createServiceInstance(createServiceInstanceRequest);
+        InstanceService instanceService = instanceService();
 
-        assertNull(serviceBindingRepository.findOne(createServiceInstanceBindingRequest.getBindingId()));
+        //grab an id to use throughout
+        String sid = UUID.randomUUID().toString();
+        String bid = UUID.randomUUID().toString();
+
+        //nothing there to begin with
+        when(mockDefaultServiceImpl.createInstance(any(io.pivotal.ecosystem.servicebroker.model.ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        assertNull(serviceInstanceRepository.findOne(sid));
+        instanceService.createServiceInstance(TestConfig.createRequest(sid, false));
+
+        assertNull(serviceBindingRepository.findOne(sid));
 
         CreateServiceInstanceAppBindingResponse cresp = (CreateServiceInstanceAppBindingResponse)
-                bindingService.createServiceInstanceBinding(createServiceInstanceBindingRequest);
+                bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(sid, bid));
 
         assertNotNull(cresp);
         assertNotNull(cresp.getCredentials());
 
-        assertNotNull(serviceBindingRepository.findOne(createServiceInstanceBindingRequest.getBindingId()));
+        assertNotNull(serviceBindingRepository.findOne(bid));
 
-        bindingService.deleteServiceInstanceBinding(deleteBindingRequest);
-        assertNull(serviceBindingRepository.findOne(createServiceInstanceBindingRequest.getBindingId()));
+        bindingService.deleteServiceInstanceBinding(TestConfig.deleteBindingRequest(sid, bid));
+        assertNull(serviceBindingRepository.findOne(bid));
 
-        instanceService.deleteServiceInstance(deleteServiceInstanceRequest);
+        when(mockDefaultServiceImpl.getServiceStatus(any(io.pivotal.ecosystem.servicebroker.model.ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        instanceService.deleteServiceInstance(TestConfig.deleteRequest(sid, false));
     }
 }

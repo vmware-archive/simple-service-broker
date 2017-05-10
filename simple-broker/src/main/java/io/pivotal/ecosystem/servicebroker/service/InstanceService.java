@@ -51,9 +51,9 @@ public class InstanceService implements ServiceInstanceService {
             throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceDefinitionId());
         }
 
-        //make sure that if this is an async broker this is an async request
-        if (brokeredService.isAsync() && !request.isAsyncAccepted()) {
-            throw new ServiceBrokerAsyncRequiredException("This broker only accepts async requests.");
+        //make sure that if this is an sync broker this is not an async request
+        if ( ! brokeredService.isAsync() && request.isAsyncAccepted()) {
+            throw new ServiceBrokerAsyncRequiredException("This broker only accepts synchronous requests.");
         }
 
         ServiceDefinition sd = catalogService.getServiceDefinition(request.getServiceDefinitionId());
@@ -69,17 +69,7 @@ public class InstanceService implements ServiceInstanceService {
             instance.setAcceptsIncomplete(false);
         }
 
-        try {
-            brokeredService.createInstance(instance);
-            if (brokeredService.isAsync()) {
-                instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, request.getServiceInstanceId()));
-            } else {
-                instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, request.getServiceInstanceId()));
-            }
-        } catch (ServiceBrokerException e) {
-            instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, request.getServiceInstanceId()));
-        }
-
+        instance.setLastOperation(brokeredService.createInstance(instance));
         saveInstance(instance);
 
         log.info("registered service instance: " + request.getServiceInstanceId());
@@ -96,28 +86,16 @@ public class InstanceService implements ServiceInstanceService {
         log.info("starting service instance delete: " + request.getServiceInstanceId());
         ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
 
-        //do not accept an update request if the last operation is still in process
+        //do not accept an delete request if the last operation is still in process
         if (instance.getLastOperation().getState().equals(OperationState.IN_PROGRESS)) {
             throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
         }
 
-        try {
-            brokeredService.deleteInstance(instance);
+        LastOperation lo = brokeredService.deleteInstance(instance);
+        instance.setLastOperation(lo);
+        saveInstance(instance);
 
-            //if ok and async set to in progress
-            if (brokeredService.isAsync()) {
-                instance.setLastOperation(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, request.getServiceInstanceId()));
-                serviceInstanceRepository.save(instance);
-            }
-
-        } catch (ServiceBrokerException e) {
-            if (brokeredService.isAsync()) {
-                instance.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, request.getServiceInstanceId()));
-                serviceInstanceRepository.save(instance);
-            }
-        }
-
-        if (!brokeredService.isAsync()) {
+        if (!brokeredService.isAsync() || OperationState.SUCCEEDED.equals(lo.getState())) {
             deleteInstance(instance);
         }
 
@@ -139,21 +117,18 @@ public class InstanceService implements ServiceInstanceService {
         originalInstance.getLastOperation().setState(OperationState.IN_PROGRESS);
         updatedInstance.setLastOperation(originalInstance.getLastOperation());
 
-        try {
-            brokeredService.updateInstance(updatedInstance);
-            if ( ! brokeredService.isAsync()) {
-                updatedInstance.getLastOperation().setState(OperationState.SUCCEEDED);
-            }
-        } catch (ServiceBrokerException e) {
+        LastOperation lo = brokeredService.updateInstance(updatedInstance);
+
+        if (OperationState.FAILED.equals(lo.getState())) {
             log.info("update failed: " + request.getServiceInstanceId());
             originalInstance.getLastOperation().setState(OperationState.FAILED);
             saveInstance(originalInstance);
             return originalInstance.getUpdateResponse();
         }
 
-        saveInstance(updatedInstance);
-
         log.info("updated service instance: " + request.getServiceInstanceId());
+        updatedInstance.setLastOperation(lo);
+        saveInstance(updatedInstance);
         return updatedInstance.getUpdateResponse();
     }
 
@@ -173,10 +148,10 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         //let's check up on things
-        log.info("checking on status of request id: " + instance.getLastOperation().getId());
+        log.info("checking on status of request id: " + instance.getId());
         try {
-            instance.getLastOperation().setState(brokeredService.getServiceStatus(instance));
-            log.info("request: " + id + " status is: " + instance.getLastOperation().getState().getValue());
+            instance.setLastOperation(brokeredService.getServiceStatus(instance));
+            log.info("request: " + id + " status is: " + instance.getLastOperation());
         } catch (ServiceBrokerException e) {
             log.error("unable to get status of request: " + id, e);
             instance.getLastOperation().setState(OperationState.FAILED);

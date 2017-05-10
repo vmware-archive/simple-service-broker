@@ -34,11 +34,11 @@ public class LastOperation implements Serializable {
 
     private Operation operation;
     private OperationState state;
-    private String id;
+    private String description;
 
     public GetLastServiceOperationResponse toResponse() {
         return new GetLastServiceOperationResponse().
-                withDescription(getId()).
+                withDescription(getDescription()).
                 withOperationState(getState()).
                 withDeleteOperation(isDelete());
     }

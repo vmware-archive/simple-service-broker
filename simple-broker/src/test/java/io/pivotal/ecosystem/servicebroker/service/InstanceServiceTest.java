@@ -17,121 +17,140 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
+import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.UUID;
+
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class InstanceServiceTest {
 
+    private static final String ID = "deleteme";
+
     @Autowired
     private CatalogService catalogService;
-
-    @Autowired
-    private CreateServiceInstanceRequest createServiceInstanceRequest;
-
-    @Autowired
-    private UpdateServiceInstanceRequest updateServiceInstanceRequest;
-
-    @Autowired
-    private DeleteServiceInstanceRequest deleteServiceInstanceRequest;
-
-    @Autowired
-    private CreateServiceInstanceRequest createServiceInstanceRequestAsync;
-
-    @Autowired
-    private UpdateServiceInstanceRequest updateServiceInstanceRequestAsync;
-
-    @Autowired
-    private DeleteServiceInstanceRequest deleteServiceInstanceRequestAsync;
 
     @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
     @Autowired
-    private GetLastServiceOperationRequest getLastServiceOperationRequest;
+    private DefaultServiceImpl mockDefaultServiceImpl;
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
     private InstanceService instanceServiceSync() {
-        return new InstanceService(catalogService, new DefaultServiceImpl(), serviceInstanceRepository);
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        return new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository);
+    }
+
+    @Before
+    public void setUp() {
+        if (serviceInstanceRepository.findOne(ID) != null) {
+            serviceInstanceRepository.delete(ID);
+        }
     }
 
     @Test
-    public void testHappyLife() throws ServiceBrokerException {
+    public void testHappyLifeCycle() throws ServiceBrokerException {
         InstanceService service = instanceServiceSync();
 
-        assertNull(serviceInstanceRepository.findOne(createServiceInstanceRequest.getServiceInstanceId()));
+        //grab an id to use throughout
+        String id = UUID.randomUUID().toString();
 
-        CreateServiceInstanceResponse csir = service.createServiceInstance(createServiceInstanceRequest);
+        assertNull(serviceInstanceRepository.findOne(id));
+
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        CreateServiceInstanceResponse csir = service.createServiceInstance(TestConfig.createRequest(id, false));
         assertNotNull(csir);
-        assertNotNull(serviceInstanceRepository.findOne(createServiceInstanceRequest.getServiceInstanceId()));
+        assertNotNull(serviceInstanceRepository.findOne(id));
 
-        ServiceInstance si = service.getServiceInstance(createServiceInstanceRequest.getServiceInstanceId());
+        ServiceInstance si = service.getServiceInstance(id);
         assertNotNull(si);
 
-        GetLastServiceOperationResponse glsor = service.getLastOperation(getLastServiceOperationRequest);
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        GetLastServiceOperationResponse glsor = service.getLastOperation(TestConfig.lastOperationRequest(id));
         assertNotNull(glsor);
         assertEquals(OperationState.SUCCEEDED, glsor.getState());
 
-        UpdateServiceInstanceResponse usir = service.updateServiceInstance(updateServiceInstanceRequest);
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        UpdateServiceInstanceResponse usir = service.updateServiceInstance(TestConfig.updateRequest(id, false));
         assertNotNull(usir);
 
-        si = service.getServiceInstance(createServiceInstanceRequest.getServiceInstanceId());
+        si = service.getServiceInstance(id);
         assertNotNull(si);
 
-        glsor = service.getLastOperation(getLastServiceOperationRequest);
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        glsor = service.getLastOperation(TestConfig.lastOperationRequest(id));
         assertNotNull(glsor);
         assertEquals(OperationState.SUCCEEDED, glsor.getState());
 
-        DeleteServiceInstanceResponse dsir = service.deleteServiceInstance(deleteServiceInstanceRequest);
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        DeleteServiceInstanceResponse dsir = service.deleteServiceInstance(TestConfig.deleteRequest(id, false));
         assertNotNull(dsir);
 
-        assertNull(serviceInstanceRepository.findOne(createServiceInstanceRequest.getServiceInstanceId()));
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        glsor = service.getLastOperation(TestConfig.lastOperationRequest(id));
+        assertNotNull(glsor);
+        assertEquals(OperationState.SUCCEEDED, glsor.getState());
+
+        assertNull(serviceInstanceRepository.findOne(id));
     }
 
     @Test
     public void testAsyncRequest() {
         InstanceService service = instanceServiceSync();
-        service.createServiceInstance(createServiceInstanceRequestAsync);
-        service.updateServiceInstance(updateServiceInstanceRequestAsync);
-        service.deleteServiceInstance(deleteServiceInstanceRequestAsync);
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        service.createServiceInstance(TestConfig.createRequest(ID, true));
+
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        service.updateServiceInstance(TestConfig.updateRequest(ID, true));
+
+        when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
+
     @Test
     public void testDuplicateCreate() {
         InstanceService service = instanceServiceSync();
-        String id = "deleteme";
 
-        if(serviceInstanceRepository.findOne(id) != null) {
-            serviceInstanceRepository.delete(id);
+        if (serviceInstanceRepository.findOne(ID) != null) {
+            serviceInstanceRepository.delete(ID);
         }
 
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
-        req.withServiceInstanceId(id);
-
-        service.createServiceInstance(req);
+        service.createServiceInstance(TestConfig.createRequest(ID, false));
 
         exception.expect(ServiceInstanceExistsException.class);
-        service.createServiceInstance(req);
+        service.createServiceInstance(TestConfig.createRequest(ID, false));
 
-        DeleteServiceInstanceRequest dreq = new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID,
-                catalogService.getServiceDefinition(TestConfig.SD_ID));
-
-        service.deleteServiceInstance(dreq);
+        service.deleteServiceInstance(TestConfig.deleteRequest(ID, false));
     }
 
 }

@@ -34,10 +34,10 @@ import java.util.Map;
 public class TestConfig {
 
     static final String SD_ID = "aUniqueId";
-    static final String PLAN_ID = "anotherUniqueId";
-    static final String APP_GUID = "anAppGuid";
-    static final String ORG_GUID = "anOrgGuid";
-    static final String SPACE_GUID = "aSpaceGuid";
+    private static final String PLAN_ID = "anotherUniqueId";
+    private static final String APP_GUID = "anAppGuid";
+    private static final String ORG_GUID = "anOrgGuid";
+    private static final String SPACE_GUID = "aSpaceGuid";
 
     @Bean
     public CatalogService catalogService() {
@@ -52,33 +52,7 @@ public class TestConfig {
     @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
-    @Bean
-    public CreateServiceInstanceRequest createServiceInstanceRequest(String serviceInstanceId) {
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
-        req.withServiceInstanceId(serviceInstanceId);
-        req.withAsyncAccepted(false);
-        return req;
-    }
-
-    @Bean
-    public CreateServiceInstanceRequest createServiceInstanceRequestAsync(String serviceInstanceId) {
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
-        req.withServiceInstanceId(serviceInstanceId);
-        req.withAsyncAccepted(true);
-        return req;
-    }
-
-    @Bean
-    public String serviceBindingId() {
-        return "sbd" + System.currentTimeMillis();
-    }
-
-    @Bean
-    public String serviceInstanceId() {
-        return "sid" + System.currentTimeMillis();
-    }
-
-    private Map<String, Object> getBindResources() {
+    private static Map<String, Object> getBindResources() {
         Map<String, Object> m = new HashMap<>();
         m.put("app_guid", APP_GUID);
         return m;
@@ -91,60 +65,43 @@ public class TestConfig {
         return m;
     }
 
-    @Bean
-    public CreateServiceInstanceBindingRequest createBindingRequest(String serviceInstanceId, String serviceBindingId) {
-        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID,
-                getBindResources(), getParameters());
+    static CreateServiceInstanceBindingRequest createBindingRequest(String serviceInstanceId, String serviceBindingId) {
+        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID, getBindResources(), getParameters());
         req.withBindingId(serviceBindingId);
         req.withServiceInstanceId(serviceInstanceId);
         return req;
     }
 
-    @Bean
-    public DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId, String serviceBindingId) {
-        return new DeleteServiceInstanceBindingRequest(serviceInstanceId, serviceBindingId, SD_ID, PLAN_ID,
-                catalogService().getServiceDefinition(SD_ID));
-    }
-
-    @Bean
-    UpdateServiceInstanceRequest updateServiceInstanceRequest(String serviceInstanceId) {
-        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
-        req.withServiceDefinition(catalogService().getServiceDefinition(SD_ID));
-        req.withServiceInstanceId(serviceInstanceId);
-        req.withAsyncAccepted(false);
-        return req;
-    }
-
-    @Bean
-    UpdateServiceInstanceRequest updateServiceInstanceRequestAsync(String serviceInstanceId) {
-        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(SD_ID, PLAN_ID, getParameters());
-        req.withServiceDefinition(catalogService().getServiceDefinition(SD_ID));
-        req.withServiceInstanceId(serviceInstanceId);
-        req.withAsyncAccepted(true);
-        return req;
-    }
-
-    @Bean
-    DeleteServiceInstanceRequest deleteServiceInstanceRequest(String serviceInstanceId) {
-        DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(serviceInstanceId, SD_ID, PLAN_ID,
-                catalogService().getServiceDefinition(SD_ID));
-        req.withAsyncAccepted(false);
-        return req;
-    }
-
-    @Bean
-    DeleteServiceInstanceRequest deleteServiceInstanceRequestAsync(String serviceInstanceId) {
-        DeleteServiceInstanceRequest req = new DeleteServiceInstanceRequest(serviceInstanceId, SD_ID, PLAN_ID,
-                catalogService().getServiceDefinition(SD_ID));
-        req.withAsyncAccepted(true);
-        return req;
-    }
-
-    @Bean
-    public GetLastServiceOperationRequest getLastServiceOperationRequest(String serviceInstanceId) {
-        return new GetLastServiceOperationRequest(serviceInstanceId);
+    static DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId, String serviceBindingId) {
+        return new DeleteServiceInstanceBindingRequest(serviceInstanceId, serviceBindingId, SD_ID, PLAN_ID, null);
     }
 
     @MockBean
     private DefaultServiceImpl mockDefaultServiceImpl;
+
+    static CreateServiceInstanceRequest createRequest(String id, boolean async) {
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
+        if (async) {
+            req.withAsyncAccepted(true);
+        }
+        req.withServiceInstanceId(id);
+        return req;
+    }
+
+    static UpdateServiceInstanceRequest updateRequest(String id, boolean async) {
+        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID);
+        if (async) {
+            req.withAsyncAccepted(true);
+        }
+        req.withServiceInstanceId(id);
+        return req;
+    }
+
+    static DeleteServiceInstanceRequest deleteRequest(String id, boolean async) {
+        return new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID, null, async);
+    }
+
+    static GetLastServiceOperationRequest lastOperationRequest(String id) {
+        return new GetLastServiceOperationRequest(id);
+    }
 }
