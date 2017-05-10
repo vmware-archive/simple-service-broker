@@ -70,6 +70,10 @@ public class ServiceInstance implements Serializable {
     @JsonProperty("accepts_incomplete")
     private Boolean acceptsIncomplete = false;
 
+    @JsonSerialize
+    @JsonProperty("deleted")
+    private Boolean deleted = false;
+
     public ServiceInstance() {
         super();
     }

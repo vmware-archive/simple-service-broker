@@ -38,6 +38,7 @@ import java.util.UUID;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -114,7 +115,9 @@ public class InstanceServiceTest {
         assertNotNull(glsor);
         assertEquals(OperationState.SUCCEEDED, glsor.getState());
 
-        assertNull(serviceInstanceRepository.findOne(id));
+        si = serviceInstanceRepository.findOne(id);
+        assertNotNull(si);
+        assertTrue(si.getDeleted());
     }
 
     @Test

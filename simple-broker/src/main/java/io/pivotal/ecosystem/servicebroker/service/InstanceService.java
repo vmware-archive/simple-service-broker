@@ -21,10 +21,7 @@ import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceDefinitionDoesNotExistException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.exception.*;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceService;
 import org.springframework.stereotype.Service;
@@ -52,7 +49,7 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         //make sure that if this is an sync broker this is not an async request
-        if ( ! brokeredService.isAsync() && request.isAsyncAccepted()) {
+        if (!brokeredService.isAsync() && request.isAsyncAccepted()) {
             throw new ServiceBrokerAsyncRequiredException("This broker only accepts synchronous requests.");
         }
 
@@ -83,6 +80,10 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
+        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).getDeleted()) {
+            throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
+        }
+
         log.info("starting service instance delete: " + request.getServiceInstanceId());
         ServiceInstance instance = getServiceInstance(request.getServiceInstanceId());
 
@@ -104,6 +105,10 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
+        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).getDeleted()) {
+            throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
+        }
+
         log.info("starting service instance update: " + request.getServiceInstanceId());
         ServiceInstance originalInstance = getServiceInstance(request.getServiceInstanceId());
 
@@ -132,7 +137,7 @@ public class InstanceService implements ServiceInstanceService {
         return updatedInstance.getUpdateResponse();
     }
 
-    public ServiceInstance getServiceInstance(String id) throws ServiceBrokerException {
+    ServiceInstance getServiceInstance(String id) throws ServiceBrokerException {
         ServiceInstance instance = serviceInstanceRepository.findOne(id);
 
         //if this is not an async broker, we can just return the instance
@@ -143,7 +148,7 @@ public class InstanceService implements ServiceInstanceService {
         //async then...
 
         //if last state is not in progress we can return (no need to check up on progress)
-        if (instance.getLastOperation().getState() != OperationState.IN_PROGRESS) {
+        if (!OperationState.IN_PROGRESS.equals(instance.getLastOperation().getState())) {
             return instance;
         }
 
@@ -174,7 +179,8 @@ public class InstanceService implements ServiceInstanceService {
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
         log.info("deleting service instance from repo: " + instance.getId());
-        serviceInstanceRepository.delete(instance.getId());
+        instance.setDeleted(true);
+        serviceInstanceRepository.save(instance);
         return instance;
     }
 

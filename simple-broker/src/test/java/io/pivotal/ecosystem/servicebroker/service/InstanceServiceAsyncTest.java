@@ -62,10 +62,6 @@ public class InstanceServiceAsyncTest {
         if (serviceInstanceRepository.findOne(ID) != null) {
             serviceInstanceRepository.delete(ID);
         }
-
-        if (serviceInstanceRepository.findOne("foo") != null) {
-            serviceInstanceRepository.delete("foo");
-        }
     }
 
     private InstanceService instanceServiceAsync() {
@@ -146,7 +142,9 @@ public class InstanceServiceAsyncTest {
         si = service.getServiceInstance(id);
         assertNotNull(si);
         assertEquals(OperationState.SUCCEEDED, si.getLastOperation().getState());
-        assertNull(serviceInstanceRepository.findOne(id));
+        si = serviceInstanceRepository.findOne(id);
+        assertNotNull(si);
+        assertTrue(si.getDeleted());
     }
 
     @Test
@@ -158,13 +156,13 @@ public class InstanceServiceAsyncTest {
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
 
         when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
-        service.createServiceInstance(TestConfig.createRequest("foo", false));
+        service.createServiceInstance(TestConfig.createRequest(ID, false));
 
         when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
-        service.updateServiceInstance(TestConfig.updateRequest("foo", false));
+        service.updateServiceInstance(TestConfig.updateRequest(ID, false));
 
         when(mockDefaultServiceImpl.getServiceStatus(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
-        service.deleteServiceInstance(TestConfig.deleteRequest("foo", false));
+        service.deleteServiceInstance(TestConfig.deleteRequest(ID, false));
     }
 
     @Test
@@ -226,7 +224,9 @@ public class InstanceServiceAsyncTest {
         assertNotNull(si);
         assertEquals(OperationState.FAILED, si.getLastOperation().getState());
 
-        assertNull(serviceInstanceRepository.findOne(ID));
+        si = serviceInstanceRepository.findOne(ID);
+        assertNotNull(si);
+        assertTrue(si.getDeleted());
     }
 
     @Test
@@ -274,7 +274,8 @@ public class InstanceServiceAsyncTest {
         assertNotNull(si);
         assertEquals(OperationState.FAILED, si.getLastOperation().getState());
 
-        assertNull(serviceInstanceRepository.findOne(ID));
+        //if delete failed, should not be marked as deleted
+        assertFalse(si.getDeleted());
     }
 
     @Test
@@ -311,6 +312,28 @@ public class InstanceServiceAsyncTest {
         assertTrue(glsoresp.isDeleteOperation());
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
+    }
+
+    @Test
+    public void testDeletedAndNonExistent() {
+        InstanceService service = instanceServiceAsync();
+
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        assertNotNull(service.createServiceInstance(TestConfig.createRequest(ID, true)));
+        ServiceInstance si = serviceInstanceRepository.findOne(ID);
+        assertNotNull(si);
+
+        si.setDeleted(true);
+        serviceInstanceRepository.save(si);
+
+        exception.expect(ServiceInstanceExistsException.class);
+        service.createServiceInstance(TestConfig.createRequest(ID, true));
+
+        exception.expect(ServiceInstanceExistsException.class);
+        service.updateServiceInstance(TestConfig.updateRequest(ID, true));
+
+        exception.expect(ServiceInstanceExistsException.class);
         service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
 }
