@@ -19,6 +19,7 @@ package io.pivotal.ecosystem.servicebroker.service;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.Operation;
+import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import java.util.UUID;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +84,9 @@ public class BindingServiceTest {
         assertNotNull(serviceBindingRepository.findOne(bid));
 
         bindingService.deleteServiceInstanceBinding(TestConfig.deleteBindingRequest(sid, bid));
-        assertNull(serviceBindingRepository.findOne(bid));
+        ServiceBinding sb = serviceBindingRepository.findOne(bid);
+        assertNotNull(sb);
+        assertTrue(sb.isDeleted());
 
         when(mockDefaultServiceImpl.getServiceStatus(any(io.pivotal.ecosystem.servicebroker.model.ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
         instanceService.deleteServiceInstance(TestConfig.deleteRequest(sid, false));

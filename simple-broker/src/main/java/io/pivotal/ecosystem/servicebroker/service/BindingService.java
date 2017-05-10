@@ -73,9 +73,7 @@ public class BindingService implements ServiceInstanceBindingService {
     }
 
     @Override
-    public void deleteServiceInstanceBinding(
-            DeleteServiceInstanceBindingRequest request) {
-
+    public void deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request) {
         ServiceBinding binding = getBinding(request.getBindingId());
 
         if (binding == null) {
@@ -92,7 +90,8 @@ public class BindingService implements ServiceInstanceBindingService {
         brokeredService.deleteBinding(si, binding);
 
         log.info("deleting binding for service instance: " + request.getBindingId() + " service instance: " + request.getServiceInstanceId());
-        serviceBindingRepository.delete(binding.getId());
+        binding.setDeleted(true);
+        serviceBindingRepository.save(binding);
     }
 
     private ServiceBinding getBinding(String id) throws ServiceBrokerException {

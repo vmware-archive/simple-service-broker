@@ -80,7 +80,7 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
-        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).getDeleted()) {
+        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).isDeleted()) {
             throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
         }
 
@@ -105,7 +105,7 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
-        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).getDeleted()) {
+        if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null && serviceInstanceRepository.findOne(request.getServiceInstanceId()).isDeleted()) {
             throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
         }
 

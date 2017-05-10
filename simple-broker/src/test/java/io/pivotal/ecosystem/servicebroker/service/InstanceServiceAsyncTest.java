@@ -144,7 +144,7 @@ public class InstanceServiceAsyncTest {
         assertEquals(OperationState.SUCCEEDED, si.getLastOperation().getState());
         si = serviceInstanceRepository.findOne(id);
         assertNotNull(si);
-        assertTrue(si.getDeleted());
+        assertTrue(si.isDeleted());
     }
 
     @Test
@@ -226,7 +226,7 @@ public class InstanceServiceAsyncTest {
 
         si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
-        assertTrue(si.getDeleted());
+        assertTrue(si.isDeleted());
     }
 
     @Test
@@ -275,7 +275,7 @@ public class InstanceServiceAsyncTest {
         assertEquals(OperationState.FAILED, si.getLastOperation().getState());
 
         //if delete failed, should not be marked as deleted
-        assertFalse(si.getDeleted());
+        assertFalse(si.isDeleted());
     }
 
     @Test

@@ -117,7 +117,7 @@ public class InstanceServiceTest {
 
         si = serviceInstanceRepository.findOne(id);
         assertNotNull(si);
-        assertTrue(si.getDeleted());
+        assertTrue(si.isDeleted());
     }
 
     @Test

@@ -65,6 +65,10 @@ public class ServiceBinding implements Serializable {
     @JsonProperty("credentials")
     private final Map<String, Object> credentials = new HashMap<>();
 
+    @JsonSerialize
+    @JsonProperty("deleted")
+    private boolean deleted = false;
+
     public ServiceBinding() {
         super();
     }
