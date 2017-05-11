@@ -71,7 +71,7 @@ public class DefaultServiceImpl implements BrokeredService {
     }
 
     @Override
-    public LastOperation getServiceStatus(ServiceInstance instance) {
+    public LastOperation lastOperation(ServiceInstance instance) {
         return instance.getLastOperation();
     }
 }

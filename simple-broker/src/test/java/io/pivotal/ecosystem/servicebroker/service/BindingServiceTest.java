@@ -88,7 +88,7 @@ public class BindingServiceTest {
         assertNotNull(sb);
         assertTrue(sb.isDeleted());
 
-        when(mockDefaultServiceImpl.getServiceStatus(any(io.pivotal.ecosystem.servicebroker.model.ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.lastOperation(any(io.pivotal.ecosystem.servicebroker.model.ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
         instanceService.deleteServiceInstance(TestConfig.deleteRequest(sid, false));
     }
 }

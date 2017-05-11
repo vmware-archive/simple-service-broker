@@ -104,4 +104,8 @@ public class TestConfig {
     static GetLastServiceOperationRequest lastOperationRequest(String id) {
         return new GetLastServiceOperationRequest(id);
     }
+
+    static GetLastServiceOperationRequest getLastServiceOperationRequest(String id) {
+        return new GetLastServiceOperationRequest(id);
+    }
 }

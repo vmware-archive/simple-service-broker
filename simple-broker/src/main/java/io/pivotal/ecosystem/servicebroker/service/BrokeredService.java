@@ -99,7 +99,7 @@ public interface BrokeredService {
 
     /**
      * @param instance service instance of interest
-     * @return the current operational state of the specified instance
+     * @return the last operational state of the specified instance
      */
-    LastOperation getServiceStatus(ServiceInstance instance);
+    LastOperation lastOperation(ServiceInstance instance);
 }

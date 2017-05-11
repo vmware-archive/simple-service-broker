@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
@@ -48,13 +49,9 @@ public class BindingService implements ServiceInstanceBindingService {
     private ServiceBindingRepository serviceBindingRepository;
 
     @Override
-    public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) throws ServiceBrokerException {
-        try {
-            if (getBinding(request.getServiceInstanceId()) != null) {
-                throw new ServiceInstanceBindingExistsException(request.getServiceInstanceId(), request.getServiceInstanceId());
-            }
-        } catch (ServiceInstanceBindingDoesNotExistException e) {
-            //ok, don't have this binding, keep going
+    public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) {
+        if (getBinding(request.getServiceInstanceId()) != null) {
+            throw new ServiceInstanceBindingExistsException(request.getServiceInstanceId(), request.getServiceInstanceId());
         }
 
         ServiceInstance instance = instanceService.getServiceInstance(request.getServiceInstanceId());
@@ -75,16 +72,15 @@ public class BindingService implements ServiceInstanceBindingService {
     @Override
     public void deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request) {
         ServiceBinding binding = getBinding(request.getBindingId());
-
-        if (binding == null) {
-            throw new ServiceBrokerException("binding with id: " + request.getBindingId() + " does not exist.");
+        if (binding == null || binding.isDeleted()) {
+            throw new ServiceInstanceBindingDoesNotExistException(request.getBindingId());
         }
 
         String serviceInstanceId = request.getServiceInstanceId();
         ServiceInstance si = instanceService.getServiceInstance(serviceInstanceId);
 
         if (si == null) {
-            throw new ServiceBrokerException("service instance for binding: " + request.getBindingId() + " is missing.");
+            throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
         }
 
         brokeredService.deleteBinding(si, binding);
@@ -94,17 +90,7 @@ public class BindingService implements ServiceInstanceBindingService {
         serviceBindingRepository.save(binding);
     }
 
-    private ServiceBinding getBinding(String id) throws ServiceBrokerException {
-        if (id == null) {
-            throw new ServiceBrokerException("null serviceBindingId");
-        }
-
-        ServiceBinding sb = serviceBindingRepository.findOne(id);
-
-        if (sb == null) {
-            throw new ServiceInstanceBindingDoesNotExistException(id);
-        }
-
-        return sb;
+    private ServiceBinding getBinding(String id) {
+        return serviceBindingRepository.findOne(id);
     }
 }
