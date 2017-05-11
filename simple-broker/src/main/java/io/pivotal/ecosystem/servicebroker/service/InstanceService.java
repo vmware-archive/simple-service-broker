@@ -57,7 +57,7 @@ public class InstanceService implements ServiceInstanceService {
 
         log.info("creating service instance: " + request.getServiceInstanceId() + " service definition: " + request.getServiceDefinitionId());
         ServiceInstance instance = new ServiceInstance(request);
-        if (brokeredService.isAsync()) {
+        if (brokeredService.isAsync() && request.isAsyncAccepted()) {
             instance.setAcceptsIncomplete(true);
         } else {
             instance.setAcceptsIncomplete(false);
@@ -69,6 +69,8 @@ public class InstanceService implements ServiceInstanceService {
             log.error("create failed", t);
             instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
         }
+
+        responseSanity(instance);
 
         if (OperationState.FAILED.equals(instance.getLastOperation().getState())) {
             instance.setDeleted(true);
@@ -140,6 +142,8 @@ public class InstanceService implements ServiceInstanceService {
             return instance.getDeleteResponse();
         }
 
+        responseSanity(instance);
+
         saveInstance(instance);
 
         if (OperationState.SUCCEEDED.equals(instance.getLastOperation().getState())) {
@@ -165,13 +169,13 @@ public class InstanceService implements ServiceInstanceService {
 
         ServiceInstance updatedInstance = new ServiceInstance(request);
         updatedInstance.setLastOperation(instance.getLastOperation());
-
         instance.getLastOperation().setOperation(Operation.UPDATE);
-        instance.getLastOperation().setState(OperationState.IN_PROGRESS);
 
-        LastOperation currentOperation = null;
         try {
-            currentOperation = brokeredService.updateInstance(updatedInstance);
+            updatedInstance.setLastOperation(brokeredService.updateInstance(updatedInstance));
+            responseSanity(updatedInstance);
+        } catch (ServiceBrokerAsyncRequiredException e) {
+            throw e;
         } catch (Throwable t) {
             log.error("update failed", t);
             instance.getLastOperation().setState(OperationState.FAILED);
@@ -180,22 +184,21 @@ public class InstanceService implements ServiceInstanceService {
             return instance.getUpdateResponse();
         }
 
-        if (OperationState.FAILED.equals(currentOperation.getState())) {
+        if (OperationState.FAILED.equals(updatedInstance.getLastOperation().getState())) {
             log.info("update failed: " + request.getServiceInstanceId());
             instance.getLastOperation().setState(OperationState.FAILED);
-            instance.getLastOperation().setDescription(currentOperation.getDescription());
+            instance.getLastOperation().setDescription(updatedInstance.getLastOperation().getDescription());
             saveInstance(instance);
             return instance.getUpdateResponse();
         }
 
         log.info("updated service instance: " + request.getServiceInstanceId());
-        updatedInstance.setLastOperation(currentOperation);
         saveInstance(updatedInstance);
         return updatedInstance.getUpdateResponse();
     }
 
     ServiceInstance getServiceInstance(String id) {
-        throw new ServiceBrokerException("don't call this!");
+        return serviceInstanceRepository.findOne(id);
     }
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
@@ -214,6 +217,12 @@ public class InstanceService implements ServiceInstanceService {
     private void syncSanity(AsyncServiceInstanceRequest request) {
         if (brokeredService.isAsync() && !request.isAsyncAccepted()) {
             throw new ServiceBrokerAsyncRequiredException("This broker only accepts asynchronous requests.");
+        }
+    }
+
+    private void responseSanity(ServiceInstance instance) {
+        if (OperationState.IN_PROGRESS.equals(instance.getLastOperation().getState()) && !brokeredService.isAsync()) {
+            throw new ServiceBrokerAsyncRequiredException("service returned in progress, but this is a synchronous broker.");
         }
     }
 }
