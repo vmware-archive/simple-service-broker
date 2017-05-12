@@ -34,11 +34,8 @@ import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsEx
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.UUID;
-
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 

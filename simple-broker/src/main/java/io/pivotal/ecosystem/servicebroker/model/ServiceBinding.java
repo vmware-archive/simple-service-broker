@@ -69,6 +69,10 @@ public class ServiceBinding implements Serializable {
     @JsonProperty("deleted")
     private boolean deleted = false;
 
+    @JsonSerialize
+    @JsonProperty("lastOperation")
+    private LastOperation lastOperation;
+
     public ServiceBinding() {
         super();
     }

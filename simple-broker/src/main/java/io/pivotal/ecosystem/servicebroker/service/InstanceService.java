@@ -44,7 +44,7 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public CreateServiceInstanceResponse createServiceInstance(CreateServiceInstanceRequest request) {
-        syncSanity(request);
+        requestSanity(request);
 
         if (serviceInstanceRepository.findOne(request.getServiceInstanceId()) != null) {
             throw new ServiceInstanceExistsException(request.getServiceInstanceId(), request.getServiceDefinitionId());
@@ -120,7 +120,7 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public DeleteServiceInstanceResponse deleteServiceInstance(DeleteServiceInstanceRequest request) {
-        syncSanity(request);
+        requestSanity(request);
 
         ServiceInstance instance = serviceInstanceRepository.findOne(request.getServiceInstanceId());
         if (instance == null || instance.isDeleted()) {
@@ -155,7 +155,7 @@ public class InstanceService implements ServiceInstanceService {
 
     @Override
     public UpdateServiceInstanceResponse updateServiceInstance(UpdateServiceInstanceRequest request) {
-        syncSanity(request);
+        requestSanity(request);
 
         ServiceInstance instance = serviceInstanceRepository.findOne(request.getServiceInstanceId());
         if (instance == null || instance.isDeleted()) {
@@ -198,7 +198,11 @@ public class InstanceService implements ServiceInstanceService {
     }
 
     ServiceInstance getServiceInstance(String id) {
-        return serviceInstanceRepository.findOne(id);
+        ServiceInstance serviceInstance = serviceInstanceRepository.findOne(id);
+        if(serviceInstance == null || serviceInstance.isDeleted()) {
+            throw new ServiceInstanceDoesNotExistException(id);
+        }
+        return serviceInstance;
     }
 
     private ServiceInstance deleteInstance(ServiceInstance instance) {
@@ -214,7 +218,7 @@ public class InstanceService implements ServiceInstanceService {
         return instance;
     }
 
-    private void syncSanity(AsyncServiceInstanceRequest request) {
+    private void requestSanity(AsyncServiceInstanceRequest request) {
         if (brokeredService.isAsync() && !request.isAsyncAccepted()) {
             throw new ServiceBrokerAsyncRequiredException("This broker only accepts asynchronous requests.");
         }

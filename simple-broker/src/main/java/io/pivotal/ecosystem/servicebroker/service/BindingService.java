@@ -17,16 +17,16 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
+import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
+import org.springframework.cloud.servicebroker.exception.*;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
+import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
 import org.springframework.stereotype.Service;
 
@@ -50,16 +50,32 @@ public class BindingService implements ServiceInstanceBindingService {
 
     @Override
     public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) {
-        if (getBinding(request.getServiceInstanceId()) != null) {
-            throw new ServiceInstanceBindingExistsException(request.getServiceInstanceId(), request.getServiceInstanceId());
-        }
 
         ServiceInstance instance = instanceService.getServiceInstance(request.getServiceInstanceId());
+
+        if (getBinding(request.getBindingId()) != null) {
+            throw new ServiceInstanceBindingExistsException(request.getServiceInstanceId(), request.getBindingId());
+        }
 
         log.info("creating binding for service instance: " + request.getServiceInstanceId() + " service: " + request.getServiceInstanceId());
         ServiceBinding binding = new ServiceBinding(request);
 
-        brokeredService.createBinding(instance, binding);
+        try {
+            binding.setLastOperation(brokeredService.createBinding(instance, binding));
+            responseSanity(binding.getLastOperation());
+        } catch (Throwable t) {
+            binding.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
+            binding.setDeleted(true);
+            serviceBindingRepository.save(binding);
+            throw new ServiceBrokerException("error creating binding", t);
+        }
+
+        if (OperationState.FAILED.equals(binding.getLastOperation().getState())) {
+            binding.setDeleted(true);
+            serviceBindingRepository.save(binding);
+            throw new ServiceBrokerException("error creating binding: " + binding.getLastOperation());
+        }
+
         Map<String, Object> creds = brokeredService.getCredentials(instance, binding);
         binding.getCredentials().putAll(creds);
 
@@ -79,11 +95,14 @@ public class BindingService implements ServiceInstanceBindingService {
         String serviceInstanceId = request.getServiceInstanceId();
         ServiceInstance si = instanceService.getServiceInstance(serviceInstanceId);
 
-        if (si == null) {
-            throw new ServiceInstanceDoesNotExistException(request.getServiceInstanceId());
+        try {
+            binding.setLastOperation(brokeredService.deleteBinding(si, binding));
+            responseSanity(binding.getLastOperation());
+        } catch (Throwable t) {
+            binding.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage()));
+            serviceBindingRepository.save(binding);
+            throw new ServiceBrokerException("error deleting binding", t);
         }
-
-        brokeredService.deleteBinding(si, binding);
 
         log.info("deleting binding for service instance: " + request.getBindingId() + " service instance: " + request.getServiceInstanceId());
         binding.setDeleted(true);
@@ -92,5 +111,11 @@ public class BindingService implements ServiceInstanceBindingService {
 
     private ServiceBinding getBinding(String id) {
         return serviceBindingRepository.findOne(id);
+    }
+
+    private void responseSanity(LastOperation lastOperation) {
+        if (OperationState.IN_PROGRESS.equals(lastOperation.getState())) {
+            throw new ServiceBrokerException("service returned in progress, but bind operations are synchronous.");
+        }
     }
 }

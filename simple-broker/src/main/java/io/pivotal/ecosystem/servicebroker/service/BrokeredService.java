@@ -20,7 +20,6 @@ package io.pivotal.ecosystem.servicebroker.service;
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
-import org.springframework.cloud.servicebroker.model.OperationState;
 
 import java.util.Map;
 
