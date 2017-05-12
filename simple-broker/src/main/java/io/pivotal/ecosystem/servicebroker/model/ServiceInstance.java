@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import lombok.NonNull;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -136,20 +137,41 @@ public class ServiceInstance implements Serializable {
         return resp;
     }
 
-    public boolean inProgress() {
-        if (getLastOperation() == null
-                || getLastOperation().getState() == null) {
-            return false;
+    private boolean isInState(@NonNull OperationState state) {
+        lastOperationSanity();
+
+        return getLastOperation().getState().equals(state);
+    }
+
+    private boolean isOperation(@NonNull Operation operation) {
+        lastOperationSanity();
+
+        return getLastOperation().getOperation().equals(operation);
+    }
+
+    public boolean isInProgress() {
+        return isInState(OperationState.IN_PROGRESS);
+    }
+
+    public boolean isFailed() {
+        return isInState(OperationState.FAILED);
+    }
+
+    public boolean isSuccessful() {
+        return isInState(OperationState.SUCCEEDED);
+    }
+
+    public boolean isCreate() {
+        return isOperation(Operation.CREATE);
+    }
+
+    public boolean isDelete() {
+        return isOperation(Operation.DELETE);
+    }
+
+    private void lastOperationSanity() {
+        if (getLastOperation() == null || getLastOperation().getState() == null || getLastOperation().getOperation() == null) {
+            throw new ServiceBrokerException("instance has no last operation.");
         }
-
-        return getLastOperation().getState().equals(OperationState.IN_PROGRESS);
-    }
-
-    public boolean isCurrentOperationSuccessful() {
-        return getLastOperation().getState().equals(OperationState.SUCCEEDED);
-    }
-
-    public boolean isCurrentOperationDelete() {
-        return getLastOperation().getOperation().equals(Operation.DELETE);
     }
 }

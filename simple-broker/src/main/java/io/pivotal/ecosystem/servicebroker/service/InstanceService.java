@@ -72,7 +72,7 @@ public class InstanceService implements ServiceInstanceService {
 
         responseSanity(instance);
 
-        if (OperationState.FAILED.equals(instance.getLastOperation().getState())) {
+        if (instance.isFailed()) {
             instance.setDeleted(true);
         }
 
@@ -95,7 +95,7 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         //if last state is not in progress no need to update last operation..
-        if (!OperationState.IN_PROGRESS.equals(instance.getLastOperation().getState())) {
+        if (!instance.isInProgress()) {
             return instance.getLastOperation().toResponse();
         }
 
@@ -104,13 +104,12 @@ public class InstanceService implements ServiceInstanceService {
         log.info("request: " + getLastServiceOperationRequest.getServiceInstanceId() + " status is: " + instance.getLastOperation());
 
         //if a create failed, delete the instance. Don't delete failed updates or failed deletes (user can try again later)
-        if (OperationState.FAILED.equals(instance.getLastOperation().getState()) && Operation.CREATE.equals(instance.getLastOperation().getOperation())) {
+        if (instance.isFailed() && instance.isCreate()) {
             return deleteInstance(instance).getLastOperation().toResponse();
         }
 
         // if this is a delete request and was successful, delete the instance
-        if (instance.isCurrentOperationSuccessful()
-                && instance.isCurrentOperationDelete()) {
+        if (instance.isSuccessful() && instance.isDelete()) {
             return deleteInstance(instance).getLastOperation().toResponse();
         }
 
@@ -128,7 +127,7 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         //do not accept an delete request if the last operation is still in process
-        if (instance.getLastOperation().getState().equals(OperationState.IN_PROGRESS)) {
+        if (instance.isInProgress()) {
             throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
         }
 
@@ -146,7 +145,7 @@ public class InstanceService implements ServiceInstanceService {
 
         saveInstance(instance);
 
-        if (OperationState.SUCCEEDED.equals(instance.getLastOperation().getState())) {
+        if (instance.isSuccessful()) {
             deleteInstance(instance);
         }
 
@@ -163,7 +162,7 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         //do not accept an update request if the last operation is still in process
-        if (instance.getLastOperation().getState().equals(OperationState.IN_PROGRESS)) {
+        if (instance.isInProgress()) {
             throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
         }
 
@@ -184,7 +183,7 @@ public class InstanceService implements ServiceInstanceService {
             return instance.getUpdateResponse();
         }
 
-        if (OperationState.FAILED.equals(updatedInstance.getLastOperation().getState())) {
+        if (instance.isFailed()) {
             log.info("update failed: " + request.getServiceInstanceId());
             instance.getLastOperation().setState(OperationState.FAILED);
             instance.getLastOperation().setDescription(updatedInstance.getLastOperation().getDescription());
@@ -199,7 +198,7 @@ public class InstanceService implements ServiceInstanceService {
 
     ServiceInstance getServiceInstance(String id) {
         ServiceInstance serviceInstance = serviceInstanceRepository.findOne(id);
-        if(serviceInstance == null || serviceInstance.isDeleted()) {
+        if (serviceInstance == null || serviceInstance.isDeleted()) {
             throw new ServiceInstanceDoesNotExistException(id);
         }
         return serviceInstance;
@@ -225,7 +224,11 @@ public class InstanceService implements ServiceInstanceService {
     }
 
     private void responseSanity(ServiceInstance instance) {
-        if (OperationState.IN_PROGRESS.equals(instance.getLastOperation().getState()) && !brokeredService.isAsync()) {
+        if (instance.getLastOperation() == null) {
+            throw new ServiceBrokerException("no last operation on instance: " + instance);
+        }
+
+        if (instance.isInProgress() && !brokeredService.isAsync()) {
             throw new ServiceBrokerAsyncRequiredException("service returned in progress, but this is a synchronous broker.");
         }
     }
