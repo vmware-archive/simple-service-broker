@@ -66,7 +66,6 @@ public class InstanceService implements ServiceInstanceService {
         try {
             instance.setLastOperation(brokeredService.createInstance(instance));
         } catch (Throwable t) {
-            log.error("create failed", t);
             instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
         }
 
@@ -101,6 +100,7 @@ public class InstanceService implements ServiceInstanceService {
 
         log.info("checking on status of request id: " + instance.getId());
         instance.setLastOperation(brokeredService.lastOperation(instance));
+        responseSanity(instance);
         log.info("request: " + getLastServiceOperationRequest.getServiceInstanceId() + " status is: " + instance.getLastOperation());
 
         //if a create failed, delete the instance. Don't delete failed updates or failed deletes (user can try again later)
@@ -128,17 +128,14 @@ public class InstanceService implements ServiceInstanceService {
 
         //do not accept an delete request if the last operation is still in process
         if (instance.isInProgress()) {
-            throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
+            throw new ServiceInstanceBlockedException(instance.getLastOperation().toString() + " is still in process.");
         }
 
         log.info("starting service instance delete: " + request.getServiceInstanceId());
         try {
             instance.setLastOperation(brokeredService.deleteInstance(instance));
         } catch (Throwable t) {
-            log.error("delete failed", t);
             instance.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage()));
-            saveInstance(instance);
-            return instance.getDeleteResponse();
         }
 
         responseSanity(instance);
@@ -163,25 +160,18 @@ public class InstanceService implements ServiceInstanceService {
 
         //do not accept an update request if the last operation is still in process
         if (instance.isInProgress()) {
-            throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
+            throw new ServiceInstanceBlockedException(instance.getId());
         }
 
         ServiceInstance updatedInstance = new ServiceInstance(request);
-        updatedInstance.setLastOperation(instance.getLastOperation());
-        instance.getLastOperation().setOperation(Operation.UPDATE);
 
         try {
             updatedInstance.setLastOperation(brokeredService.updateInstance(updatedInstance));
-            responseSanity(updatedInstance);
-        } catch (ServiceBrokerAsyncRequiredException e) {
-            throw e;
         } catch (Throwable t) {
-            log.error("update failed", t);
-            instance.getLastOperation().setState(OperationState.FAILED);
-            instance.getLastOperation().setDescription(t.getMessage());
-            saveInstance(instance);
-            return instance.getUpdateResponse();
+            updatedInstance.setLastOperation(new LastOperation(Operation.UPDATE, OperationState.FAILED, t.getMessage()));
         }
+
+        responseSanity(updatedInstance);
 
         if (instance.isFailed()) {
             log.info("update failed: " + request.getServiceInstanceId());
@@ -219,17 +209,17 @@ public class InstanceService implements ServiceInstanceService {
 
     private void requestSanity(AsyncServiceInstanceRequest request) {
         if (brokeredService.isAsync() && !request.isAsyncAccepted()) {
-            throw new ServiceBrokerAsyncRequiredException("This broker only accepts asynchronous requests.");
+            throw new ServiceBrokerAsyncRequiredException("This service plan requires client support for asynchronous service operations.");
         }
     }
 
     private void responseSanity(ServiceInstance instance) {
         if (instance.getLastOperation() == null) {
-            throw new ServiceBrokerException("no last operation on instance: " + instance);
+            throw new ServiceBrokerInvalidParametersException("no last operation on instance: " + instance);
         }
 
         if (instance.isInProgress() && !brokeredService.isAsync()) {
-            throw new ServiceBrokerAsyncRequiredException("service returned in progress, but this is a synchronous broker.");
+            throw new ServiceBrokerInvalidParametersException("This service plan requires client support for asynchronous service operations.");
         }
     }
 }

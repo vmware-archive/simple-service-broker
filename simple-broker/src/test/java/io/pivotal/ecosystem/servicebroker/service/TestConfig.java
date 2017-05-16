@@ -22,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -34,10 +35,23 @@ import java.util.Map;
 public class TestConfig {
 
     static final String SD_ID = "aUniqueId";
-    private static final String PLAN_ID = "anotherUniqueId";
+    static final String PLAN_ID = "anotherUniqueId";
     private static final String APP_GUID = "anAppGuid";
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
+
+    @Autowired
+    private Environment env;
+
+    @Bean
+    public String brokerUserId() {
+        return env.getProperty("SECURITY_USER_NAME");
+    }
+
+    @Bean
+    public String brokerPassword() {
+        return env.getProperty("SECURITY_USER_PASSWORD");
+    }
 
     @Bean
     public CatalogService catalogService() {

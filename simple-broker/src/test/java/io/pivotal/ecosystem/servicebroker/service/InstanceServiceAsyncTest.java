@@ -21,16 +21,14 @@ import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.exception.*;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -276,11 +274,11 @@ public class InstanceServiceAsyncTest {
         assertNotNull(si);
 
         when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
-        exception.expect(ServiceBrokerException.class);
+        exception.expect(ServiceInstanceBlockedException.class);
         service.updateServiceInstance(TestConfig.updateRequest(ID, true));
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
-        exception.expect(ServiceBrokerException.class);
+        exception.expect(ServiceInstanceBlockedException.class);
         service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
 

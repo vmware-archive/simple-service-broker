@@ -21,16 +21,14 @@ import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerAsyncRequiredException;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
-import org.springframework.cloud.servicebroker.exception.ServiceInstanceExistsException;
+import org.springframework.cloud.servicebroker.exception.*;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -75,7 +73,7 @@ public class InstanceServiceTest {
 
         when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
 
-        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        exception.expect(ServiceBrokerInvalidParametersException.class);
         service.createServiceInstance(TestConfig.createRequest(ID, true));
     }
 
@@ -88,7 +86,7 @@ public class InstanceServiceTest {
 
         when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
 
-        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        exception.expect(ServiceBrokerInvalidParametersException.class);
         service.updateServiceInstance(TestConfig.updateRequest(ID, true));
     }
 
@@ -101,7 +99,7 @@ public class InstanceServiceTest {
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleteing."));
 
-        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        exception.expect(ServiceBrokerInvalidParametersException.class);
         service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
 
@@ -210,21 +208,21 @@ public class InstanceServiceTest {
         InstanceService service = instanceServiceSync();
 
         when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, null));
-        assertNotNull(service.createServiceInstance(TestConfig.createRequest(ID, true)));
+        assertNotNull(service.createServiceInstance(TestConfig.createRequest(ID, false)));
         ServiceInstance si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
         assertEquals(OperationState.SUCCEEDED, si.getLastOperation().getState());
         assertFalse(si.isDeleted());
 
         when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenThrow(new ServiceBrokerException("noooooo!"));
-        assertNotNull(service.updateServiceInstance(TestConfig.updateRequest(ID, true)));
+        assertNotNull(service.updateServiceInstance(TestConfig.updateRequest(ID, false)));
         si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
         assertEquals(OperationState.FAILED, si.getLastOperation().getState());
         assertFalse(si.isDeleted());
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenThrow(new ServiceBrokerException("ooof!"));
-        assertNotNull(service.deleteServiceInstance(TestConfig.deleteRequest(ID, true)));
+        assertNotNull(service.deleteServiceInstance(TestConfig.deleteRequest(ID, false)));
         si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
         assertEquals(OperationState.FAILED, si.getLastOperation().getState());
@@ -328,7 +326,7 @@ public class InstanceServiceTest {
         when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "created."));
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "created."));
 
-        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        exception.expect(ServiceBrokerInvalidParametersException.class);
         service.createServiceInstance(TestConfig.createRequest(ID, true));
     }
 
@@ -343,7 +341,7 @@ public class InstanceServiceTest {
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleted."));
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "created."));
 
-        exception.expect(ServiceBrokerAsyncRequiredException.class);
+        exception.expect(ServiceBrokerInvalidParametersException.class);
         service.updateServiceInstance(TestConfig.updateRequest(ID, true));
         service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }

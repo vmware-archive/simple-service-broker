@@ -12,17 +12,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.servicebroker.controller.ServiceInstanceController;
 import org.springframework.cloud.servicebroker.model.OperationState;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.Base64Utils;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,9 +45,16 @@ public class InstanceMVCTest {
     @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
+    @Autowired
+    private String brokerUserId;
+
+    @Autowired
+    private String brokerPassword;
+
     @Before
     public void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new ServiceInstanceController(catalogService, new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository))).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new ServiceInstanceController(catalogService, new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository)))
+                .build();
     }
 
     @After
@@ -56,7 +65,7 @@ public class InstanceMVCTest {
     }
 
     @Test
-    public void testSyncCreate() throws Exception {
+    public void testSyncHappyPath() throws Exception {
         when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
         when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
         this.mockMvc.perform(put("/v2/service_instances/" + ID)
@@ -64,11 +73,26 @@ public class InstanceMVCTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andDo(print());
+
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        this.mockMvc.perform(patch("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.updateRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
+                .content(toJson(TestConfig.deleteRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
     }
 
     @Test
-    public void testAsyncCreate() throws Exception {
+    public void testAsyncHappyPath() throws Exception {
         when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
         when(mockDefaultServiceImpl.isAsync()).thenReturn(true);
         this.mockMvc.perform(put("/v2/service_instances/" + ID + "?accepts_incomplete=true")
                 .content(toJson(TestConfig.createRequest(ID, true)))
@@ -76,10 +100,84 @@ public class InstanceMVCTest {
                 .andExpect(status().isAccepted())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
         this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        this.mockMvc.perform(patch("/v2/service_instances/" + ID + "?accepts_incomplete=true")
+                .content(toJson(TestConfig.updateRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID + "&accepts_incomplete=true")
+                .content(toJson(TestConfig.deleteRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isGone())
+                .andDo(print());
+    }
+
+    @Test
+    public void testNoLastOpCreateUpdateDelete() throws Exception {
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andDo(print());
+
+        this.mockMvc.perform(patch("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.updateRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+
+        this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
+                .content(toJson(TestConfig.deleteRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+    }
+
+    @Test
+    public void testBogusIdUpdateDelete() throws Exception {
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        this.mockMvc.perform(patch("/v2/service_instances/bogus")
+                .content(toJson(TestConfig.updateRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+
+        this.mockMvc.perform(delete("/v2/service_instances/bogus?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
+                .content(toJson(TestConfig.deleteRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isGone())
                 .andDo(print());
     }
 
@@ -97,6 +195,106 @@ public class InstanceMVCTest {
                 .content(toJson(TestConfig.createRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+    }
+
+    @Test
+    public void testConcurrentInProgressFails() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(true);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID + "?accepts_incomplete=true")
+                .content(toJson(TestConfig.createRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isAccepted());
+
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        this.mockMvc.perform(patch("/v2/service_instances/" + ID + "?accepts_incomplete=true")
+                .content(toJson(TestConfig.updateRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andDo(print());
+
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID + "&accepts_incomplete=true")
+                .content(toJson(TestConfig.deleteRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andDo(print());
+    }
+
+    @Test
+    public void testAsyncRequestToSyncBroker() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID + "?accepts_incomplete=true")
+                .content(toJson(TestConfig.createRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+    }
+
+    @Test
+    public void testAsyncFlagsMissing() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(true);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID + "?accepts_incomplete=false")
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity())
+                .andDo(print());
+    }
+
+    @Test
+    public void testSyncLastOperation() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
+
+    @Test
+    public void testAsyncLastOperation() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(true);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID + "?accepts_incomplete=true")
+                .content(toJson(TestConfig.createRequest(ID, true)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isAccepted());
+
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
+
+    @Test
+    public void testDuplicateCreate() throws Exception {
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.isAsync()).thenReturn(false);
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andDo(print());
+
+        this.mockMvc.perform(put("/v2/service_instances/" + ID)
+                .content(toJson(TestConfig.createRequest(ID, false)))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
                 .andDo(print());
     }
 
