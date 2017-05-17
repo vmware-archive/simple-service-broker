@@ -18,13 +18,10 @@
 package io.pivotal.ecosystem.servicebroker;
 
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.config.java.AbstractCloudConfig;
-import org.springframework.cloud.servicebroker.model.BrokerApiVersion;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -38,16 +35,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 public class Config extends AbstractCloudConfig {
 
     @Bean
-    public BrokerApiVersion brokerApiVersion() {
-        return new BrokerApiVersion();
-    }
-
-    @Bean
-    public BrokerApiVersion brokerApiVersion(Environment env) {
-        return new BrokerApiVersion(env.getProperty("API_VERSION"));
-    }
-
-    @Bean
     public RedisConnectionFactory redisFactory() {
         return new JedisConnectionFactory();
     }
@@ -57,18 +44,5 @@ public class Config extends AbstractCloudConfig {
         RedisTemplate<String, ServiceBinding> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
         return template;
-    }
-
-    @Autowired
-    private Environment env;
-
-    @Bean
-    public String brokerUserId() {
-        return env.getProperty("SECURITY_USER_NAME");
-    }
-
-    @Bean
-    public String brokerPassword() {
-        return env.getProperty("SECURITY_USER_PASSWORD");
     }
 }

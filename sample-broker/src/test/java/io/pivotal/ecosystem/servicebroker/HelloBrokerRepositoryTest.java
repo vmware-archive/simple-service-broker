@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -40,10 +39,10 @@ import static org.mockito.BDDMockito.given;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class HelloBrokerTest {
+public class HelloBrokerRepositoryTest {
 
-    @MockBean
-    private HelloBrokerRepository helloBrokerRepository;
+    @Autowired
+    private HelloBrokerRepository mockRepo;
 
     @Autowired
     private BrokeredService helloBroker;
@@ -67,7 +66,7 @@ public class HelloBrokerTest {
 
     @Test
     public void testProvision() throws ServiceBrokerException {
-        given(this.helloBrokerRepository.provisionUser(instanceUser))
+        given(this.mockRepo.provisionUser(instanceUser))
                 .willReturn(new User(instanceUser.getName(), TestConfig.PASSWORD, instanceUser.getRole()));
 
         LastOperation lo = helloBroker.createInstance(serviceInstance);
@@ -93,7 +92,7 @@ public class HelloBrokerTest {
 
     @Test
     public void testBinding() {
-        given(this.helloBrokerRepository.provisionUser(bindingUser))
+        given(this.mockRepo.provisionUser(bindingUser))
                 .willReturn(new User(bindingUser.getName(), TestConfig.PASSWORD, bindingUser.getRole()));
 
         LastOperation lo = helloBroker.createBinding(serviceInstance, serviceBinding);
@@ -138,7 +137,7 @@ public class HelloBrokerTest {
 
     @Test
     public void testInstanceUpdate() {
-        given(this.helloBrokerRepository.updateUser(instanceUser.getName(), instanceUser))
+        given(this.mockRepo.updateUser(instanceUser.getName(), instanceUser))
                 .willReturn(new User(instanceUser.getName(), "newPassword", instanceUser.getRole()));
 
         serviceInstance.getParameters().put("user", instanceUser);

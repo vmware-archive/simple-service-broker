@@ -45,12 +45,6 @@ public class InstanceMVCTest {
     @Autowired
     private ServiceInstanceRepository serviceInstanceRepository;
 
-    @Autowired
-    private String brokerUserId;
-
-    @Autowired
-    private String brokerPassword;
-
     @Before
     public void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new ServiceInstanceController(catalogService, new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository)))

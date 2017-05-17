@@ -40,19 +40,6 @@ public class TestConfig {
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
 
-    @Autowired
-    private Environment env;
-
-    @Bean
-    public String brokerUserId() {
-        return env.getProperty("SECURITY_USER_NAME");
-    }
-
-    @Bean
-    public String brokerPassword() {
-        return env.getProperty("SECURITY_USER_PASSWORD");
-    }
-
     @Bean
     public CatalogService catalogService() {
         return new CatalogService();

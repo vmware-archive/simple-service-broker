@@ -20,6 +20,7 @@ package io.pivotal.ecosystem.servicebroker;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
+import org.springframework.cloud.servicebroker.model.BrokerApiVersion;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -28,6 +29,11 @@ import org.springframework.core.env.Environment;
 @Configuration
 @Profile("cloud")
 public class HelloConfig {
+
+    @Bean
+    public BrokerApiVersion brokerApiVersion() {
+        return new BrokerApiVersion();
+    }
 
     @Bean
     public HelloBrokerRepository helloRepository(Environment env) {
