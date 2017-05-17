@@ -1,4 +1,5 @@
 target
+classes
 *.iml
 *.jar
 .idea/
@@ -10,3 +11,4 @@ tile-history*.*
 tile-generator
 sample-broker/product
 sample-broker/release
+*.versionsBackup
