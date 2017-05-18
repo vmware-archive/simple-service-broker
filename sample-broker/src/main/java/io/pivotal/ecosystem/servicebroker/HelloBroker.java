@@ -75,6 +75,7 @@ public class HelloBroker extends DefaultServiceImpl {
             return new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
+            System.out.println(t);
             return new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage());
         }
     }
