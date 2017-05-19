@@ -164,6 +164,11 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         ServiceInstance updatedInstance = new ServiceInstance(request);
+        for(String key: instance.getParameters().keySet()) {
+            if(! updatedInstance.getParameters().containsKey(key)) {
+                updatedInstance.addParameter(key, instance.getParameters().get(key));
+            }
+        }
 
         try {
             updatedInstance.setLastOperation(brokeredService.updateInstance(updatedInstance));
@@ -173,7 +178,7 @@ public class InstanceService implements ServiceInstanceService {
 
         responseSanity(updatedInstance);
 
-        if (instance.isFailed()) {
+        if (updatedInstance.isFailed()) {
             log.info("update failed: " + request.getServiceInstanceId());
             instance.getLastOperation().setState(OperationState.FAILED);
             instance.getLastOperation().setDescription(updatedInstance.getLastOperation().getDescription());

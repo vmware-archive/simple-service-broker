@@ -17,20 +17,15 @@
 
 package io.pivotal.ecosystem.servicebroker;
 
-import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.config.java.AbstractCloudConfig;
 import org.springframework.cloud.service.PooledServiceConnectorConfig;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 import org.springframework.cloud.servicebroker.model.BrokerApiVersion;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration
 @EnableRedisRepositories
@@ -48,17 +43,5 @@ public class Config extends AbstractCloudConfig {
         PooledServiceConnectorConfig.PoolConfig poolConfig = new PooledServiceConnectorConfig.PoolConfig(5, 30, 3000);
         PooledServiceConnectorConfig redisConfig = new PooledServiceConnectorConfig(poolConfig);
         return connectionFactory().redisConnectionFactory(redisConfig);
-    }
-
-    @Bean
-    RedisTemplate<String, ServiceBinding> bindingTemplate(RedisConnectionFactory redisConnectionFactory) {
-        try {
-            RedisTemplate<String, ServiceBinding> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisConnectionFactory);
-            return template;
-        } catch (Throwable t) {
-            log.error("error creating redis template.", t);
-            throw new ServiceBrokerException(t);
-        }
     }
 }

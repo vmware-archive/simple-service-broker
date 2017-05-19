@@ -33,7 +33,6 @@ class HelloController {
         this.userStore = userStore;
     }
 
-    //TODO protect with basic auth (admin)
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     ResponseEntity<User> createUser(@RequestBody User user) {
         if (userStore.userExists(user.getName())) {
@@ -44,7 +43,6 @@ class HelloController {
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    //TODO protect with basic auth (admin)
     @RequestMapping(value = "/users", method = RequestMethod.PUT)
     ResponseEntity<User> updateUser(@RequestBody User user) {
         if (!userStore.userExists(user.getName())) {
@@ -55,7 +53,6 @@ class HelloController {
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    //TODO protect with basic auth (admin)
     @RequestMapping(value = "/users/{username}", method = RequestMethod.DELETE)
     ResponseEntity<Void> deleteUser(@PathVariable(value = "username") String username) {
         if (!userStore.userExists(username)) {
@@ -65,7 +62,6 @@ class HelloController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    //TODO protect with basic auth (user)
     @RequestMapping(value = "/greeting", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
     ResponseEntity<String> greeting(@RequestParam(value = "username") String username) {
         String response = "Sorry, I don't think we've met.";

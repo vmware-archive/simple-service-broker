@@ -63,13 +63,13 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public LastOperation createInstance(ServiceInstance instance) {
-
-        //TODO use admin creds to talk to service
         log.info("provisioning broker user: " + instance.getId());
 
         try {
-            User user = helloRepository.provisionUser(new User(instance.getId(), User.Role.Broker));
-            instance.addParameter("user", user);
+            User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
+            instance.addParameter("user", user.getName());
+            instance.addParameter("role", user.getRole().toString());
+            instance.addParameter("password", user.getPassword().toString());
             String msg = "broker user: " + user.getName() + " created.";
             log.info(msg);
             return new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, msg);
@@ -88,14 +88,12 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public LastOperation deleteInstance(ServiceInstance instance) {
-        //TODO use admin creds to talk to service
         log.info("deprovisioning broker user: " + instance.getId());
 
         try {
-            User user = (User) instance.getParameter("user");
-            helloRepository.deprovisionUser(user.getName());
-            instance.getParameters().remove("user");
-            String msg = "broker user: " + user.getName() + " deleted.";
+            String name = instance.getParameter("user").toString();
+            helloRepository.deprovisionUser(name);
+            String msg = "broker user: " + name + " deleted.";
             log.info(msg);
             return new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, msg);
         } catch (Throwable t) {
@@ -112,13 +110,14 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public LastOperation updateInstance(ServiceInstance instance) {
-        //TODO change user/pw for this instance, use admin creds to talk to service
         log.info("updating broker user: " + instance.getId());
 
         try {
-            User user = (User) instance.getParameter("user");
-            user = helloRepository.updateUser(user.getName(), user);
-            instance.getParameters().put("user", user);
+            User user = new User();
+            user.setName(instance.getParameter("user").toString());
+            user.setPassword(instance.getParameter("password").toString());
+            user.setRole(User.Role.valueOf(instance.getParameter("role").toString()));
+            user = helloRepository.updateUser(user);
             String msg = "broker user: " + user.getName() + " updated.";
             log.info(msg);
             return new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, msg);
@@ -143,11 +142,10 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public LastOperation createBinding(ServiceInstance instance, ServiceBinding binding) {
-        //TODO use admin creds to talk to service
         log.info("provisioning user: " + binding.getId());
 
         try {
-            User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
+            User user = helloRepository.provisionUser(new User(binding.getId(), null, User.Role.User));
             binding.getParameters().put("user", user);
             String msg = "user: " + user.getName() + " created.";
             log.info(msg);

@@ -20,11 +20,11 @@ package io.pivotal.ecosystem.servicebroker;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
-import org.springframework.cloud.servicebroker.model.CreateServiceInstanceRequest;
+import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,18 +36,17 @@ class TestConfig {
     static final String SB_ID = "sbId";
 
     static final String SD_ID = "aUniqueId";
-    private static final String PLAN_ID = "anotherUniqueId";
+    static final String PLAN_ID = "anotherUniqueId";
     private static final String APP_GUID = "anAppGuid";
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
 
     static final String PASSWORD = "password";
 
-    @MockBean
-    private RedisTemplate<String, ServiceInstance> instanceTemplate;
-
-    @MockBean
-    private RedisTemplate<String, ServiceBinding> bindingTemplate;
+    @Bean
+    public RedisConnectionFactory connectionFactory() {
+        return new JedisConnectionFactory();
+    }
 
     @MockBean
     HelloBrokerRepository helloBrokerRepository;
@@ -62,16 +61,6 @@ class TestConfig {
     @Bean
     public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
         return new ServiceInstance(req);
-    }
-
-    @Bean
-    public User instanceUser() {
-        return new User(SI_ID, User.Role.Broker);
-    }
-
-    @Bean
-    public User bindingUser() {
-        return new User(SB_ID, User.Role.User);
     }
 
     private Map<String, Object> getBindResources() {
@@ -99,5 +88,31 @@ class TestConfig {
     @Bean
     public ServiceBinding serviceBinding(CreateServiceInstanceBindingRequest req) {
         return new ServiceBinding(req);
+    }
+
+    static CreateServiceInstanceRequest createRequest(String id, boolean async) {
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, new HashMap<>());
+        if (async) {
+            req.withAsyncAccepted(true);
+        }
+        req.withServiceInstanceId(id);
+        return req;
+    }
+
+    static GetLastServiceOperationRequest lastOperationRequest(String id) {
+        return new GetLastServiceOperationRequest(id);
+    }
+
+    static UpdateServiceInstanceRequest updateRequest(String id, boolean async) {
+        UpdateServiceInstanceRequest req = new UpdateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID);
+        if (async) {
+            req.withAsyncAccepted(true);
+        }
+        req.withServiceInstanceId(id);
+        return req;
+    }
+
+    static DeleteServiceInstanceRequest deleteRequest(String id, boolean async) {
+        return new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID, null, async);
     }
 }
