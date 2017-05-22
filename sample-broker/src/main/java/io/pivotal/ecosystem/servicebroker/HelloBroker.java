@@ -44,6 +44,10 @@ import java.util.Map;
 @Slf4j
 public class HelloBroker extends DefaultServiceImpl {
 
+    private static final String USER_NAME_KEY = "user";
+    private static final String PASSWORD_KEY = "password";
+    private static final String ROLE_KEY = "role";
+
     public HelloBroker(HelloBrokerRepository helloRepository, Environment env) {
         super();
         this.helloRepository = helloRepository;
@@ -67,9 +71,9 @@ public class HelloBroker extends DefaultServiceImpl {
 
         try {
             User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
-            instance.addParameter("user", user.getName());
-            instance.addParameter("role", user.getRole().toString());
-            instance.addParameter("password", user.getPassword().toString());
+            instance.addParameter(USER_NAME_KEY, user.getName());
+            instance.addParameter(ROLE_KEY, user.getRole().toString());
+            instance.addParameter(PASSWORD_KEY, user.getPassword().toString());
             String msg = "broker user: " + user.getName() + " created.";
             log.info(msg);
             return new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, msg);
@@ -91,7 +95,7 @@ public class HelloBroker extends DefaultServiceImpl {
         log.info("deprovisioning broker user: " + instance.getId());
 
         try {
-            String name = instance.getParameter("user").toString();
+            String name = instance.getParameter(USER_NAME_KEY).toString();
             helloRepository.deprovisionUser(name);
             String msg = "broker user: " + name + " deleted.";
             log.info(msg);
@@ -114,9 +118,9 @@ public class HelloBroker extends DefaultServiceImpl {
 
         try {
             User user = new User();
-            user.setName(instance.getParameter("user").toString());
-            user.setPassword(instance.getParameter("password").toString());
-            user.setRole(User.Role.valueOf(instance.getParameter("role").toString()));
+            user.setName(instance.getParameter(USER_NAME_KEY).toString());
+            user.setPassword(instance.getParameter(PASSWORD_KEY).toString());
+            user.setRole(User.Role.valueOf(instance.getParameter(ROLE_KEY).toString()));
             user = helloRepository.updateUser(user);
             String msg = "broker user: " + user.getName() + " updated.";
             log.info(msg);
@@ -146,7 +150,9 @@ public class HelloBroker extends DefaultServiceImpl {
 
         try {
             User user = helloRepository.provisionUser(new User(binding.getId(), null, User.Role.User));
-            binding.getParameters().put("user", user);
+            binding.getParameters().put(USER_NAME_KEY, user.getName());
+            binding.getParameters().put(ROLE_KEY, user.getRole());
+            binding.getParameters().put(PASSWORD_KEY, user.getPassword());
             String msg = "user: " + user.getName() + " created.";
             log.info(msg);
             return new LastOperation(Operation.BIND, OperationState.SUCCEEDED, msg);
@@ -164,14 +170,12 @@ public class HelloBroker extends DefaultServiceImpl {
      */
     @Override
     public LastOperation deleteBinding(ServiceInstance instance, ServiceBinding binding) {
-        //TODO use admin creds to talk to service
         log.info("deprovisioning user: " + binding.getId());
 
         try {
-            User user = (User) binding.getParameter("user");
-            helloRepository.deprovisionUser(user.getName());
-            binding.getParameters().remove("user");
-            String msg = "user: " + user.getName() + " deleted.";
+            String name = binding.getParameter(USER_NAME_KEY).toString();
+            helloRepository.deprovisionUser(name);
+            String msg = "user: " + name + " deleted.";
             log.info(msg);
             return new LastOperation(Operation.UNBIND, OperationState.SUCCEEDED, msg);
         } catch (Throwable t) {
@@ -199,13 +203,11 @@ public class HelloBroker extends DefaultServiceImpl {
         log.info("returning creds.");
 
         try {
-            User user = (User) binding.getParameters().get("user");
-
             Map<String, Object> m = new HashMap<>();
             m.put("hostname", env.getProperty("HELLO_HOST"));
             m.put("port", env.getProperty("HELLO_PORT"));
-            m.put("username", user.getName());
-            m.put("password", user.getPassword());
+            m.put("username", binding.getParameter(USER_NAME_KEY));
+            m.put("password", binding.getParameter(PASSWORD_KEY));
 
             String uri = "hello://" + m.get("username") + ":" + m.get("password") + "@" + m.get("hostname") + ":" + m.get("port");
             m.put("uri", uri);
@@ -219,7 +221,6 @@ public class HelloBroker extends DefaultServiceImpl {
 
     @Override
     public boolean isAsync() {
-        //TODO deal with async
         return false;
     }
 }
