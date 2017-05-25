@@ -66,6 +66,7 @@ public class InstanceService implements ServiceInstanceService {
         try {
             instance.setLastOperation(brokeredService.createInstance(instance));
         } catch (Throwable t) {
+            log.error("error creating instance: " + request.getServiceInstanceId(), t);
             instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
         }
 
@@ -99,7 +100,15 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         log.info("checking on status of request id: " + instance.getId());
-        instance.setLastOperation(brokeredService.lastOperation(instance));
+        try {
+            instance.setLastOperation(brokeredService.lastOperation(instance));
+        } catch (Throwable t) {
+            log.error("error checking status of instance: " + instance.getId(), t);
+            instance.getLastOperation().setState(OperationState.FAILED);
+            instance.getLastOperation().setDescription(t.getMessage());
+            return instance.getLastOperation().toResponse();
+        }
+
         responseSanity(instance);
         log.info("request: " + getLastServiceOperationRequest.getServiceInstanceId() + " status is: " + instance.getLastOperation());
 
@@ -135,6 +144,7 @@ public class InstanceService implements ServiceInstanceService {
         try {
             instance.setLastOperation(brokeredService.deleteInstance(instance));
         } catch (Throwable t) {
+            log.error("error deleting instance: " + request.getServiceInstanceId(), t);
             instance.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage()));
         }
 
@@ -164,8 +174,8 @@ public class InstanceService implements ServiceInstanceService {
         }
 
         ServiceInstance updatedInstance = new ServiceInstance(request);
-        for(String key: instance.getParameters().keySet()) {
-            if(! updatedInstance.getParameters().containsKey(key)) {
+        for (String key : instance.getParameters().keySet()) {
+            if (!updatedInstance.getParameters().containsKey(key)) {
                 updatedInstance.addParameter(key, instance.getParameters().get(key));
             }
         }
@@ -173,6 +183,7 @@ public class InstanceService implements ServiceInstanceService {
         try {
             updatedInstance.setLastOperation(brokeredService.updateInstance(updatedInstance));
         } catch (Throwable t) {
+            log.error("error updating instance: " + updatedInstance.getId(), t);
             updatedInstance.setLastOperation(new LastOperation(Operation.UPDATE, OperationState.FAILED, t.getMessage()));
         }
 
