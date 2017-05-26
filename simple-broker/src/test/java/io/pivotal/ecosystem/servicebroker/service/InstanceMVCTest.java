@@ -205,14 +205,14 @@ public class InstanceMVCTest {
         this.mockMvc.perform(patch("/v2/service_instances/" + ID + "?accepts_incomplete=true")
                 .content(toJson(TestConfig.updateRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andDo(print());
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
         this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID + "&accepts_incomplete=true")
                 .content(toJson(TestConfig.deleteRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andDo(print());
     }
 

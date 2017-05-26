@@ -137,7 +137,7 @@ public class InstanceService implements ServiceInstanceService {
 
         //do not accept an delete request if the last operation is still in process
         if (instance.isInProgress()) {
-            throw new ServiceInstanceBlockedException(instance.getLastOperation().toString() + " is still in process.");
+            throw new ServiceBrokerException(instance.getLastOperation().toString() + " is still in process.");
         }
 
         log.info("starting service instance delete: " + request.getServiceInstanceId());
@@ -170,7 +170,7 @@ public class InstanceService implements ServiceInstanceService {
 
         //do not accept an update request if the last operation is still in process
         if (instance.isInProgress()) {
-            throw new ServiceInstanceBlockedException(instance.getId());
+            throw new ServiceBrokerException(instance.getId());
         }
 
         ServiceInstance updatedInstance = new ServiceInstance(request);

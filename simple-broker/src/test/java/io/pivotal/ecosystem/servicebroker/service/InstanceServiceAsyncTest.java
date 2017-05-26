@@ -274,11 +274,11 @@ public class InstanceServiceAsyncTest {
         assertNotNull(si);
 
         when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
-        exception.expect(ServiceInstanceBlockedException.class);
+        exception.expect(ServiceBrokerException.class);
         service.updateServiceInstance(TestConfig.updateRequest(ID, true));
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
-        exception.expect(ServiceInstanceBlockedException.class);
+        exception.expect(ServiceBrokerException.class);
         service.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
 
