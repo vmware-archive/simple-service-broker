@@ -47,6 +47,10 @@ public class InstanceMVCTest {
 
     @Before
     public void setUp() {
+        if (serviceInstanceRepository.findOne(ID) != null) {
+            serviceInstanceRepository.delete(ID);
+        }
+
         mockMvc = MockMvcBuilders.standaloneSetup(new ServiceInstanceController(catalogService, new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository)))
                 .build();
     }
@@ -95,7 +99,7 @@ public class InstanceMVCTest {
                 .andDo(print());
 
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
-        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
@@ -109,7 +113,7 @@ public class InstanceMVCTest {
                 .andDo(print());
 
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
-        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
@@ -123,7 +127,7 @@ public class InstanceMVCTest {
                 .andDo(print());
 
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
-        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isGone())
                 .andDo(print());
@@ -253,7 +257,7 @@ public class InstanceMVCTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
@@ -269,7 +273,7 @@ public class InstanceMVCTest {
                 .andExpect(status().isAccepted());
 
         when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
-        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation")
+        this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());

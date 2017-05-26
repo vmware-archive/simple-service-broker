@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-cloudfoundry-service-broker</artifactId>
-            <version>1.0.0.RELEASE</version>
+            <version>1.0.1.RELEASE</version>
         </dependency>
 
         <dependency>
@@ -74,6 +74,14 @@
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>spring-libs-release</id>
+            <name>Spring Release Repository</name>
+            <url>http://repo.spring.io/libs-release</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <snapshotRepository>
