@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
  * <p>
  * This program and the accompanying materials are made available under
@@ -21,7 +21,6 @@ import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,7 +28,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.servicebroker.exception.*;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceDoesNotExistException;
 import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -48,6 +50,9 @@ public class BindingServiceTest {
     private BindingService bindingService;
 
     @Autowired
+    private InstanceService instanceService;
+
+    @Autowired
     private CatalogService catalogService;
 
     @Autowired
@@ -62,33 +67,9 @@ public class BindingServiceTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
-    private InstanceService instanceService() {
-        return new InstanceService(catalogService, mockDefaultServiceImpl, serviceInstanceRepository);
-    }
-
     @Before
     public void setUp() {
-        if (serviceBindingRepository.findOne(ID) != null) {
-            serviceBindingRepository.delete(ID);
-        }
-
-        if (serviceInstanceRepository.findOne(ID) != null) {
-            serviceInstanceRepository.delete(ID);
-        }
-
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
-        instanceService().createServiceInstance(TestConfig.createRequest(ID, true));
-    }
-
-    @After
-    public void cleanUp() {
-        if (serviceBindingRepository.findOne(ID) != null) {
-            serviceBindingRepository.delete(ID);
-        }
-
-        if (serviceInstanceRepository.findOne(ID) != null) {
-            serviceInstanceRepository.delete(ID);
-        }
+        when(serviceInstanceRepository.findOne(ID)).thenReturn(TestConfig.getServiceInstance(ID, false));
     }
 
     @Test
@@ -102,7 +83,9 @@ public class BindingServiceTest {
     @Test
     public void testThatInProgressDeleteFails() {
         when(mockDefaultServiceImpl.createBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.BIND, OperationState.SUCCEEDED, "bound."));
+
         bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID));
+        when(serviceBindingRepository.findOne(ID)).thenReturn(TestConfig.getServiceBinding(ID));
 
         when(mockDefaultServiceImpl.deleteBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "unbound."));
 
@@ -126,7 +109,10 @@ public class BindingServiceTest {
     public void testThatDeletedIdDeletesAreRejected() {
         when(mockDefaultServiceImpl.createBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.BIND, OperationState.SUCCEEDED, "bound."));
         when(mockDefaultServiceImpl.deleteBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.UNBIND, OperationState.SUCCEEDED, "unbound."));
+
         bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID));
+        when(serviceBindingRepository.findOne(ID)).thenReturn(TestConfig.getServiceBinding(ID));
+
         bindingService.deleteServiceInstanceBinding(TestConfig.deleteBindingRequest(ID, ID));
 
         exception.expect(ServiceInstanceBindingDoesNotExistException.class);
@@ -136,7 +122,9 @@ public class BindingServiceTest {
     @Test
     public void testThatDuplicateIdCreatesAreRejected() {
         when(mockDefaultServiceImpl.createBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.BIND, OperationState.SUCCEEDED, "bound."));
+
         bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID));
+        when(serviceBindingRepository.findOne(ID)).thenReturn(TestConfig.getServiceBinding(ID));
 
         exception.expect(ServiceInstanceBindingExistsException.class);
         bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID));
@@ -186,11 +174,9 @@ public class BindingServiceTest {
     public void testBrokerOtherExceptions() {
         when(mockDefaultServiceImpl.createBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.BIND, OperationState.SUCCEEDED, "bound."));
         assertNotNull(bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID)));
-        ServiceBinding sb = serviceBindingRepository.findOne(ID);
-        assertNotNull(sb);
-        assertEquals(OperationState.SUCCEEDED, sb.getLastOperation().getState());
-        assertFalse(sb.isDeleted());
 
+        ServiceBinding sb = TestConfig.getServiceBinding(ID);
+        when(serviceBindingRepository.findOne(ID)).thenReturn(sb);
         when(mockDefaultServiceImpl.deleteBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenThrow(new RuntimeException("ooof!"));
         exception.expect(ServiceBrokerException.class);
 
@@ -205,9 +191,8 @@ public class BindingServiceTest {
     public void testHappyLifeCycle() throws ServiceBrokerException {
         when(mockDefaultServiceImpl.createBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.BIND, OperationState.SUCCEEDED, "bound."));
         assertNotNull(bindingService.createServiceInstanceBinding(TestConfig.createBindingRequest(ID, ID)));
-        ServiceBinding sb = serviceBindingRepository.findOne(ID);
-        assertNotNull(sb);
-        assertEquals(OperationState.SUCCEEDED, sb.getLastOperation().getState());
+        ServiceBinding sb = TestConfig.getServiceBinding(ID);
+        when(serviceBindingRepository.findOne(ID)).thenReturn(sb);
         assertFalse(sb.isDeleted());
 
         when(mockDefaultServiceImpl.deleteBinding(any(ServiceInstance.class), any(ServiceBinding.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "unbound."));

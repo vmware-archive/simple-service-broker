@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
  * <p>
  * This program and the accompanying materials are made available under

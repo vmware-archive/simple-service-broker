@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
  * <p>
  * This program and the accompanying materials are made available under
@@ -17,14 +17,14 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 import java.util.HashMap;
@@ -45,13 +45,22 @@ public class TestConfig {
         return new CatalogService();
     }
 
-    @Bean
-    public RedisConnectionFactory connectionFactory() {
-        return new JedisConnectionFactory();
-    }
+    @Autowired
+    @InjectMocks
+    private BindingService bindingService;
 
     @Autowired
+    @InjectMocks
+    private InstanceService instanceService;
+
+    @MockBean
+    private ServiceBindingRepository serviceBindingRepository;
+
+    @MockBean
     private ServiceInstanceRepository serviceInstanceRepository;
+
+    @MockBean
+    private DefaultServiceImpl mockDefaultServiceImpl;
 
     private static Map<String, Object> getBindResources() {
         Map<String, Object> m = new HashMap<>();
@@ -76,9 +85,6 @@ public class TestConfig {
     static DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId, String serviceBindingId) {
         return new DeleteServiceInstanceBindingRequest(serviceInstanceId, serviceBindingId, SD_ID, PLAN_ID, null);
     }
-
-    @MockBean
-    private DefaultServiceImpl mockDefaultServiceImpl;
 
     static CreateServiceInstanceRequest createRequest(String id, boolean async) {
         CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
@@ -108,5 +114,13 @@ public class TestConfig {
 
     static GetLastServiceOperationRequest getLastServiceOperationRequest(String id) {
         return new GetLastServiceOperationRequest(id);
+    }
+
+    static ServiceInstance getServiceInstance(String id, boolean async) {
+        return new ServiceInstance(createRequest(id, async));
+    }
+
+    static ServiceBinding getServiceBinding(String id) {
+        return new ServiceBinding(createBindingRequest(id, id));
     }
 }
