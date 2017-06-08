@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
  * <p>
  * This program and the accompanying materials are made available under
@@ -44,9 +44,9 @@ import java.util.Map;
 @Slf4j
 public class HelloBroker extends DefaultServiceImpl {
 
-    private static final String USER_NAME_KEY = "user";
-    private static final String PASSWORD_KEY = "password";
-    private static final String ROLE_KEY = "role";
+    static final String USER_NAME_KEY = "user";
+    static final String PASSWORD_KEY = "password";
+    static final String ROLE_KEY = "role";
 
     public HelloBroker(HelloBrokerRepository helloRepository, Environment env) {
         super();
@@ -73,13 +73,12 @@ public class HelloBroker extends DefaultServiceImpl {
             User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
             instance.addParameter(USER_NAME_KEY, user.getName());
             instance.addParameter(ROLE_KEY, user.getRole().toString());
-            instance.addParameter(PASSWORD_KEY, user.getPassword().toString());
+            instance.addParameter(PASSWORD_KEY, user.getPassword());
             String msg = "broker user: " + user.getName() + " created.";
             log.info(msg);
             return new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            System.out.println(t);
             return new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage());
         }
     }
@@ -121,10 +120,9 @@ public class HelloBroker extends DefaultServiceImpl {
             user.setName(instance.getParameter(USER_NAME_KEY).toString());
             user.setPassword(instance.getParameter(PASSWORD_KEY).toString());
             user.setRole(User.Role.valueOf(instance.getParameter(ROLE_KEY).toString()));
-            user = helloRepository.updateUser(user);
-            String msg = "broker user: " + user.getName() + " updated.";
-            log.info(msg);
-            return new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, msg);
+            helloRepository.updateUser(user);
+            log.info("broker user updated");
+            return new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated.");
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
             return new LastOperation(Operation.UPDATE, OperationState.FAILED, t.getMessage());

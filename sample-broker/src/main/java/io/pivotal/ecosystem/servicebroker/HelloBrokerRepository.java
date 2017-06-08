@@ -1,4 +1,4 @@
-/**
+/*
  Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
 
  This program and the accompanying materials are made available under
@@ -29,7 +29,7 @@ interface HelloBrokerRepository {
 
     @Headers("Content-Type: application/json")
     @RequestLine("DELETE /users/{username}")
-    User deprovisionUser(@Param(value = "username") String username);
+    void deprovisionUser(@Param(value = "username") String username);
 
     @Headers("Content-Type: application/json")
     @RequestLine("PUT /users")

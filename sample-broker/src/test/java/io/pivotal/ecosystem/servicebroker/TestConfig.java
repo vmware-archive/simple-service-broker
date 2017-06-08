@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
  * <p>
  * This program and the accompanying materials are made available under
@@ -17,14 +17,16 @@
 
 package io.pivotal.ecosystem.servicebroker;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
+import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import io.pivotal.ecosystem.servicebroker.service.ServiceBindingRepository;
+import io.pivotal.ecosystem.servicebroker.service.ServiceInstanceRepository;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +34,8 @@ import java.util.Map;
 @Configuration
 class TestConfig {
 
-    static final String SI_ID = "siId";
-    static final String SB_ID = "sbId";
+    private static final String SI_ID = "siId";
+    private static final String SB_ID = "sbId";
 
     static final String SD_ID = "aUniqueId";
     static final String PLAN_ID = "anotherUniqueId";
@@ -41,12 +43,11 @@ class TestConfig {
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
 
-    static final String PASSWORD = "password";
+    @MockBean
+    private ServiceBindingRepository serviceBindingRepository;
 
-    @Bean
-    public RedisConnectionFactory connectionFactory() {
-        return new JedisConnectionFactory();
-    }
+    @MockBean
+    private ServiceInstanceRepository serviceInstanceRepository;
 
     @MockBean
     HelloBrokerRepository helloBrokerRepository;
@@ -60,7 +61,12 @@ class TestConfig {
 
     @Bean
     public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
-        return new ServiceInstance(req);
+        ServiceInstance si = new ServiceInstance(req);
+        si.setLastOperation(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        si.addParameter(HelloBroker.USER_NAME_KEY, "world");
+        si.addParameter(HelloBroker.PASSWORD_KEY, "guest");
+        si.addParameter(HelloBroker.ROLE_KEY, User.Role.User);
+        return si;
     }
 
     private Map<String, Object> getBindResources() {
