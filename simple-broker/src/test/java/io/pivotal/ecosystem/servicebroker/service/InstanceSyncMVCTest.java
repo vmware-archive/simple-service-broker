@@ -19,7 +19,6 @@ package io.pivotal.ecosystem.servicebroker.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +26,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.servicebroker.controller.ServiceInstanceController;
-import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,7 +62,7 @@ public class InstanceSyncMVCTest {
     @Before
     public void setUp() {
         ServiceInstance serviceInstance = TestConfig.getServiceInstance(ID, false);
-        LastOperation lastOperation = new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created.");
+        LastOperation lastOperation = new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created.");
         serviceInstance.setLastOperation(lastOperation);
         when(mockDefaultServiceImpl.createInstance(serviceInstance)).thenReturn(lastOperation);
         when(mockDefaultServiceImpl.lastOperation(serviceInstance)).thenReturn(lastOperation);
@@ -79,21 +77,21 @@ public class InstanceSyncMVCTest {
     public void testSyncHappyPath() throws Exception {
         //create already "happened" in setup()
 
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
         this.mockMvc.perform(put("/v2/service_instances/bogus")
                 .content(toJson(TestConfig.createRequest(ID, false)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         this.mockMvc.perform(patch("/v2/service_instances/" + ID)
                 .content(toJson(TestConfig.updateRequest(ID, false)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .content(toJson(TestConfig.deleteRequest(ID, false)))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -125,7 +123,7 @@ public class InstanceSyncMVCTest {
 
     @Test
     public void testBogusIdUpdateDelete() throws Exception {
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         this.mockMvc.perform(patch("/v2/service_instances/bogus")
                 .content(toJson(TestConfig.updateRequest(ID, false)))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -141,7 +139,7 @@ public class InstanceSyncMVCTest {
 
     @Test
     public void testAsyncRequestToSyncBroker() throws Exception {
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.IN_PROGRESS, "creating."));
         this.mockMvc.perform(put("/v2/service_instances/bogus?accepts_incomplete=true")
                 .content(toJson(TestConfig.createRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))

@@ -137,36 +137,36 @@ public class ServiceInstance implements Serializable {
         return resp;
     }
 
-    private boolean isInState(@NonNull OperationState state) {
+    private boolean isInState(@NonNull String state) {
         lastOperationSanity();
 
         return getLastOperation().getState().equals(state);
     }
 
-    private boolean isOperation(@NonNull Operation operation) {
+    private boolean isOperation(@NonNull String operation) {
         lastOperationSanity();
 
         return getLastOperation().getOperation().equals(operation);
     }
 
     public boolean isInProgress() {
-        return isInState(OperationState.IN_PROGRESS);
+        return isInState(LastOperation.IN_PROGRESS);
     }
 
     public boolean isFailed() {
-        return isInState(OperationState.FAILED);
+        return isInState(LastOperation.FAILED);
     }
 
     public boolean isSuccessful() {
-        return isInState(OperationState.SUCCEEDED);
+        return isInState(LastOperation.SUCCEEDED);
     }
 
     public boolean isCreate() {
-        return isOperation(Operation.CREATE);
+        return isOperation(LastOperation.CREATE);
     }
 
     public boolean isDelete() {
-        return isOperation(Operation.DELETE);
+        return isOperation(LastOperation.DELETE);
     }
 
     private void lastOperationSanity() {

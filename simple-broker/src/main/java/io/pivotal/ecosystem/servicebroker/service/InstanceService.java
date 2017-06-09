@@ -18,7 +18,6 @@
 package io.pivotal.ecosystem.servicebroker.service;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.*;
@@ -67,7 +66,7 @@ public class InstanceService implements ServiceInstanceService {
             instance.setLastOperation(brokeredService.createInstance(instance));
         } catch (Throwable t) {
             log.error("error creating instance: " + request.getServiceInstanceId(), t);
-            instance.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
+            instance.setLastOperation(new LastOperation(LastOperation.CREATE, LastOperation.FAILED, t.getMessage()));
         }
 
         responseSanity(instance);
@@ -104,7 +103,7 @@ public class InstanceService implements ServiceInstanceService {
             instance.setLastOperation(brokeredService.lastOperation(instance));
         } catch (Throwable t) {
             log.error("error checking status of instance: " + instance.getId(), t);
-            instance.getLastOperation().setState(OperationState.FAILED);
+            instance.getLastOperation().setState(LastOperation.FAILED);
             instance.getLastOperation().setDescription(t.getMessage());
             return instance.getLastOperation().toResponse();
         }
@@ -145,7 +144,7 @@ public class InstanceService implements ServiceInstanceService {
             instance.setLastOperation(brokeredService.deleteInstance(instance));
         } catch (Throwable t) {
             log.error("error deleting instance: " + request.getServiceInstanceId(), t);
-            instance.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage()));
+            instance.setLastOperation(new LastOperation(LastOperation.DELETE, LastOperation.FAILED, t.getMessage()));
         }
 
         responseSanity(instance);
@@ -184,14 +183,14 @@ public class InstanceService implements ServiceInstanceService {
             updatedInstance.setLastOperation(brokeredService.updateInstance(updatedInstance));
         } catch (Throwable t) {
             log.error("error updating instance: " + updatedInstance.getId(), t);
-            updatedInstance.setLastOperation(new LastOperation(Operation.UPDATE, OperationState.FAILED, t.getMessage()));
+            updatedInstance.setLastOperation(new LastOperation(LastOperation.UPDATE, LastOperation.FAILED, t.getMessage()));
         }
 
         responseSanity(updatedInstance);
 
         if (updatedInstance.isFailed()) {
             log.info("update failed: " + request.getServiceInstanceId());
-            instance.getLastOperation().setState(OperationState.FAILED);
+            instance.getLastOperation().setState(LastOperation.FAILED);
             instance.getLastOperation().setDescription(updatedInstance.getLastOperation().getDescription());
             saveInstance(instance);
             return instance.getUpdateResponse();

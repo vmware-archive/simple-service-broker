@@ -18,7 +18,6 @@
 package io.pivotal.ecosystem.servicebroker.service;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 
@@ -29,32 +28,32 @@ public class DefaultServiceImpl implements BrokeredService {
 
     @Override
     public LastOperation createInstance(ServiceInstance instance) {
-        instance.getLastOperation().setOperation(Operation.CREATE);
+        instance.getLastOperation().setOperation(LastOperation.CREATE);
         return instance.getLastOperation();
     }
 
     @Override
     public LastOperation deleteInstance(ServiceInstance instance) {
-        instance.getLastOperation().setOperation(Operation.DELETE);
+        instance.getLastOperation().setOperation(LastOperation.DELETE);
         return instance.getLastOperation();
     }
 
     @Override
     public LastOperation updateInstance(ServiceInstance instance) {
-        instance.getLastOperation().setOperation(Operation.UPDATE);
+        instance.getLastOperation().setOperation(LastOperation.UPDATE);
         return instance.getLastOperation();
     }
 
     @Override
     public LastOperation createBinding(ServiceInstance instance, ServiceBinding binding) {
-        instance.getLastOperation().setOperation(Operation.BIND);
+        instance.getLastOperation().setOperation(LastOperation.BIND);
         return instance.getLastOperation();
 
     }
 
     @Override
     public LastOperation deleteBinding(ServiceInstance instance, ServiceBinding binding) {
-        instance.getLastOperation().setOperation(Operation.UNBIND);
+        instance.getLastOperation().setOperation(LastOperation.UNBIND);
         return instance.getLastOperation();
     }
 

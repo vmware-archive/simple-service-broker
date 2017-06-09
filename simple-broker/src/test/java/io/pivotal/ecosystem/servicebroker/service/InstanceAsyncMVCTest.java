@@ -19,7 +19,6 @@ package io.pivotal.ecosystem.servicebroker.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +26,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.servicebroker.controller.ServiceInstanceController;
-import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,7 +62,7 @@ public class InstanceAsyncMVCTest {
     @Before
     public void setUp() {
         ServiceInstance serviceInstance = TestConfig.getServiceInstance(ID, true);
-        LastOperation lastOperation = new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating.");
+        LastOperation lastOperation = new LastOperation(LastOperation.CREATE, LastOperation.IN_PROGRESS, "creating.");
         serviceInstance.setLastOperation(lastOperation);
         when(mockDefaultServiceImpl.createInstance(serviceInstance)).thenReturn(lastOperation);
         when(mockDefaultServiceImpl.lastOperation(serviceInstance)).thenReturn(lastOperation);
@@ -79,35 +77,35 @@ public class InstanceAsyncMVCTest {
     public void testAsyncHappyPath() throws Exception {
         //create has been mocked up out of existence...
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
         this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.IN_PROGRESS, "updating."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         this.mockMvc.perform(patch("/v2/service_instances/" + ID + "?accepts_incomplete=true")
                 .content(toJson(TestConfig.updateRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.IN_PROGRESS, "deleting."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID + "&accepts_incomplete=true")
                 .content(toJson(TestConfig.deleteRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         this.mockMvc.perform(get("/v2/service_instances/" + ID + "/last_operation?&service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isGone())
@@ -131,14 +129,14 @@ public class InstanceAsyncMVCTest {
 
     @Test
     public void testConcurrentInProgressFails() throws Exception {
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         this.mockMvc.perform(patch("/v2/service_instances/" + ID + "?accepts_incomplete=true")
                 .content(toJson(TestConfig.updateRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
                 .andDo(print());
 
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         this.mockMvc.perform(delete("/v2/service_instances/" + ID + "?service_id=" + TestConfig.SD_ID + "&plan_id=" + TestConfig.PLAN_ID + "&accepts_incomplete=true")
                 .content(toJson(TestConfig.deleteRequest(ID, true)))
                 .contentType(MediaType.APPLICATION_JSON))

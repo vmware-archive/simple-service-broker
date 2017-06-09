@@ -18,15 +18,15 @@
 package io.pivotal.ecosystem.servicebroker.service;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.servicebroker.exception.*;
+import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
+import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingRequest;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceBindingResponse;
 import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindingRequest;
-import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
 import org.springframework.stereotype.Service;
 
@@ -64,13 +64,13 @@ public class BindingService implements ServiceInstanceBindingService {
             binding.setLastOperation(brokeredService.createBinding(instance, binding));
             responseSanity(binding.getLastOperation());
         } catch (Throwable t) {
-            binding.setLastOperation(new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage()));
+            binding.setLastOperation(new LastOperation(LastOperation.CREATE, LastOperation.FAILED, t.getMessage()));
             binding.setDeleted(true);
             serviceBindingRepository.save(binding);
             throw new ServiceBrokerException("error creating binding", t);
         }
 
-        if (OperationState.FAILED.equals(binding.getLastOperation().getState())) {
+        if (LastOperation.FAILED.equals(binding.getLastOperation().getState())) {
             binding.setDeleted(true);
             serviceBindingRepository.save(binding);
             throw new ServiceBrokerException("error creating binding: " + binding.getLastOperation());
@@ -99,7 +99,7 @@ public class BindingService implements ServiceInstanceBindingService {
             binding.setLastOperation(brokeredService.deleteBinding(si, binding));
             responseSanity(binding.getLastOperation());
         } catch (Throwable t) {
-            binding.setLastOperation(new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage()));
+            binding.setLastOperation(new LastOperation(LastOperation.DELETE, LastOperation.FAILED, t.getMessage()));
             serviceBindingRepository.save(binding);
             throw new ServiceBrokerException("error deleting binding", t);
         }
@@ -114,7 +114,7 @@ public class BindingService implements ServiceInstanceBindingService {
     }
 
     private void responseSanity(LastOperation lastOperation) {
-        if (OperationState.IN_PROGRESS.equals(lastOperation.getState())) {
+        if (LastOperation.IN_PROGRESS.equals(lastOperation.getState())) {
             throw new ServiceBrokerException("service returned in progress, but bind operations are synchronous.");
         }
     }

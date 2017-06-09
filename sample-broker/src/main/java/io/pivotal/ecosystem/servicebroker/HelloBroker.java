@@ -18,13 +18,11 @@
 package io.pivotal.ecosystem.servicebroker;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import io.pivotal.ecosystem.servicebroker.service.DefaultServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.model.OperationState;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -76,10 +74,10 @@ public class HelloBroker extends DefaultServiceImpl {
             instance.addParameter(PASSWORD_KEY, user.getPassword());
             String msg = "broker user: " + user.getName() + " created.";
             log.info(msg);
-            return new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, msg);
+            return new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            return new LastOperation(Operation.CREATE, OperationState.FAILED, t.getMessage());
+            return new LastOperation(LastOperation.CREATE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -98,10 +96,10 @@ public class HelloBroker extends DefaultServiceImpl {
             helloRepository.deprovisionUser(name);
             String msg = "broker user: " + name + " deleted.";
             log.info(msg);
-            return new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, msg);
+            return new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            return new LastOperation(Operation.DELETE, OperationState.FAILED, t.getMessage());
+            return new LastOperation(LastOperation.DELETE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -122,10 +120,10 @@ public class HelloBroker extends DefaultServiceImpl {
             user.setRole(User.Role.valueOf(instance.getParameter(ROLE_KEY).toString()));
             helloRepository.updateUser(user);
             log.info("broker user updated");
-            return new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated.");
+            return new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated.");
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            return new LastOperation(Operation.UPDATE, OperationState.FAILED, t.getMessage());
+            return new LastOperation(LastOperation.UPDATE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -153,10 +151,10 @@ public class HelloBroker extends DefaultServiceImpl {
             binding.getParameters().put(PASSWORD_KEY, user.getPassword());
             String msg = "user: " + user.getName() + " created.";
             log.info(msg);
-            return new LastOperation(Operation.BIND, OperationState.SUCCEEDED, msg);
+            return new LastOperation(LastOperation.BIND, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            return new LastOperation(Operation.BIND, OperationState.FAILED, t.getMessage());
+            return new LastOperation(LastOperation.BIND, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -175,10 +173,10 @@ public class HelloBroker extends DefaultServiceImpl {
             helloRepository.deprovisionUser(name);
             String msg = "user: " + name + " deleted.";
             log.info(msg);
-            return new LastOperation(Operation.UNBIND, OperationState.SUCCEEDED, msg);
+            return new LastOperation(LastOperation.UNBIND, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            return new LastOperation(Operation.UNBIND, OperationState.FAILED, t.getMessage());
+            return new LastOperation(LastOperation.UNBIND, LastOperation.FAILED, t.getMessage());
         }
     }
 

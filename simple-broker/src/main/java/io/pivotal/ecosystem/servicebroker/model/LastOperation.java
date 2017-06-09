@@ -32,18 +32,39 @@ public class LastOperation implements Serializable {
 
     public static final long serialVersionUID = 1L;
 
-    private Operation operation;
-    private OperationState state;
+    public static String CREATE = "create";
+    public static String DELETE = "delete";
+    public static String UPDATE = "update";
+    public static String BIND = "bind";
+    public static String UNBIND = "unbind";
+
+    public static String SUCCEEDED = "succeeded";
+    public static String FAILED = "failed";
+    public static String IN_PROGRESS = "in progress";
+
+
+    private String operation;
+    private String state;
     private String description;
 
     public GetLastServiceOperationResponse toResponse() {
-        return new GetLastServiceOperationResponse().
-                withDescription(getDescription()).
-                withOperationState(getState()).
-                withDeleteOperation(isDelete());
+        GetLastServiceOperationResponse getLastServiceOperationResponse = new GetLastServiceOperationResponse();
+        getLastServiceOperationResponse.withDescription(getDescription());
+        getLastServiceOperationResponse.withDeleteOperation(isDelete());
+
+        //work around for bug in OperationState.valueOf()
+        if (SUCCEEDED.equals(getState())) {
+            getLastServiceOperationResponse.withOperationState(OperationState.SUCCEEDED);
+        } else if (FAILED.equals(getState())) {
+            getLastServiceOperationResponse.withOperationState(OperationState.FAILED);
+        } else if (IN_PROGRESS.equals(getState())) {
+            getLastServiceOperationResponse.withOperationState(OperationState.IN_PROGRESS);
+        }
+
+        return getLastServiceOperationResponse;
     }
 
     private boolean isDelete() {
-        return Operation.DELETE.equals(operation);
+        return DELETE.equals(operation);
     }
 }

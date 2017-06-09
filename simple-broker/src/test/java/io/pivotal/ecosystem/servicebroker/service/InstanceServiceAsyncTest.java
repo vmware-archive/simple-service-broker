@@ -18,7 +18,6 @@
 package io.pivotal.ecosystem.servicebroker.service;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import org.junit.Before;
 import org.junit.Rule;
@@ -65,7 +64,7 @@ public class InstanceServiceAsyncTest {
     @Before
     public void setUp() {
         serviceInstance = TestConfig.getServiceInstance(ID, true);
-        LastOperation lastOperation = new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating.");
+        LastOperation lastOperation = new LastOperation(LastOperation.CREATE, LastOperation.IN_PROGRESS, "creating.");
         serviceInstance.setLastOperation(lastOperation);
         when(mockDefaultServiceImpl.createInstance(serviceInstance)).thenReturn(lastOperation);
         when(mockDefaultServiceImpl.lastOperation(serviceInstance)).thenReturn(lastOperation);
@@ -78,29 +77,29 @@ public class InstanceServiceAsyncTest {
     @Test
     public void testHappyLifeCycle() throws ServiceBrokerException {
         //create an instance, already "done" in setup()
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
         instanceService.getLastOperation(TestConfig.getLastServiceOperationRequest(ID));
-        assertEquals(OperationState.SUCCEEDED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.SUCCEEDED, serviceInstance.getLastOperation().getState());
         assertFalse(serviceInstance.isDeleted());
 
         //update instanceService
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.IN_PROGRESS, "updating."));
         UpdateServiceInstanceResponse usir = instanceService.updateServiceInstance(TestConfig.updateRequest(ID, true));
         assertNotNull(usir);
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.SUCCEEDED, "updated."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated."));
         instanceService.getLastOperation(TestConfig.getLastServiceOperationRequest(ID));
-        assertEquals(OperationState.SUCCEEDED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.SUCCEEDED, serviceInstance.getLastOperation().getState());
         assertFalse(serviceInstance.isDeleted());
 
         //delete instanceService
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.IN_PROGRESS, "deleting."));
         DeleteServiceInstanceResponse dsir = instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
         assertNotNull(dsir);
 
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         instanceService.getLastOperation(TestConfig.getLastServiceOperationRequest(ID));
-        assertEquals(OperationState.SUCCEEDED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.SUCCEEDED, serviceInstance.getLastOperation().getState());
         assertTrue(serviceInstance.isDeleted());
     }
 
@@ -136,10 +135,10 @@ public class InstanceServiceAsyncTest {
 
     @Test
     public void testThatDeletedIdUpdatesAreRejected() {
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
 
-        serviceInstance.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstance.getLastOperation().setState(LastOperation.SUCCEEDED);
         instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
 
         exception.expect(ServiceInstanceDoesNotExistException.class);
@@ -148,8 +147,8 @@ public class InstanceServiceAsyncTest {
 
     @Test
     public void testThatDeletedIdDeletesAreRejected() {
-        serviceInstance.getLastOperation().setState(OperationState.SUCCEEDED);
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        serviceInstance.getLastOperation().setState(LastOperation.SUCCEEDED);
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
 
         exception.expect(ServiceInstanceDoesNotExistException.class);
@@ -158,7 +157,7 @@ public class InstanceServiceAsyncTest {
 
     @Test
     public void testThatDuplicateIdCreatesAreRejected() {
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
 
         exception.expect(ServiceInstanceExistsException.class);
         instanceService.createServiceInstance(TestConfig.createRequest(ID, true));
@@ -166,25 +165,25 @@ public class InstanceServiceAsyncTest {
 
     @Test
     public void testFailedRequests() {
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.FAILED, null));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.FAILED, null));
         assertNotNull(instanceService.createServiceInstance(TestConfig.createRequest("bogus", true)));
 
-        serviceInstance.getLastOperation().setState(OperationState.SUCCEEDED);
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.FAILED, null));
+        serviceInstance.getLastOperation().setState(LastOperation.SUCCEEDED);
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.FAILED, null));
         assertNotNull(instanceService.updateServiceInstance(TestConfig.updateRequest(ID, true)));
-        assertEquals(OperationState.FAILED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, serviceInstance.getLastOperation().getState());
         assertFalse(serviceInstance.isDeleted());
 
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.FAILED, null));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.FAILED, null));
         assertNotNull(instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true)));
-        assertEquals(OperationState.FAILED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, serviceInstance.getLastOperation().getState());
         assertFalse(serviceInstance.isDeleted());
     }
 
     @Test
     public void testBrokerCreateException() {
         ServiceInstance serviceInstance = TestConfig.getServiceInstance("bogus", false);
-        LastOperation lastOperation = new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created.");
+        LastOperation lastOperation = new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created.");
         serviceInstance.setLastOperation(lastOperation);
         when(mockDefaultServiceImpl.createInstance(serviceInstance)).thenReturn(lastOperation);
 
@@ -195,29 +194,29 @@ public class InstanceServiceAsyncTest {
 
     @Test
     public void testBrokerOtherExceptions() {
-        serviceInstance.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstance.getLastOperation().setState(LastOperation.SUCCEEDED);
         when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenThrow(new ServiceBrokerException("noooooo!"));
         assertNotNull(instanceService.updateServiceInstance(TestConfig.updateRequest(ID, true)));
         ServiceInstance si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
-        assertEquals(OperationState.FAILED, si.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, si.getLastOperation().getState());
         assertFalse(si.isDeleted());
 
         when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenThrow(new ServiceBrokerException("ooof!"));
         assertNotNull(instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true)));
         si = serviceInstanceRepository.findOne(ID);
         assertNotNull(si);
-        assertEquals(OperationState.FAILED, si.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, si.getLastOperation().getState());
         assertFalse(si.isDeleted());
     }
 
     @Test
     public void testRequestsWhileStillInProgress() {
-        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.UPDATE, OperationState.IN_PROGRESS, "updating."));
+        when(mockDefaultServiceImpl.updateInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.UPDATE, LastOperation.IN_PROGRESS, "updating."));
         exception.expect(ServiceBrokerException.class);
         instanceService.updateServiceInstance(TestConfig.updateRequest(ID, true));
 
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleting."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.IN_PROGRESS, "deleting."));
         exception.expect(ServiceBrokerException.class);
         instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true));
     }
@@ -226,31 +225,31 @@ public class InstanceServiceAsyncTest {
     public void testLastOperation() {
 
         //successful create
-        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.IN_PROGRESS, "creating."));
+        when(mockDefaultServiceImpl.createInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.IN_PROGRESS, "creating."));
         assertNotNull(instanceService.createServiceInstance(TestConfig.createRequest("bogus", true)));
 
         //failed create
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.CREATE, OperationState.FAILED, "creating."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.CREATE, LastOperation.FAILED, "creating."));
         GetLastServiceOperationResponse glsoresp = instanceService.getLastOperation(TestConfig.getLastServiceOperationRequest(ID));
         assertNotNull(glsoresp);
         assertEquals(OperationState.FAILED, glsoresp.getState());
 
-        assertEquals(OperationState.FAILED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, serviceInstance.getLastOperation().getState());
         assertTrue(serviceInstance.isDeleted());
 
         //failed delete
-        serviceInstance.getLastOperation().setState(OperationState.SUCCEEDED);
+        serviceInstance.getLastOperation().setState(LastOperation.SUCCEEDED);
         serviceInstance.setDeleted(false);
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleted."));
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.FAILED, "oops."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.IN_PROGRESS, "deleted."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.FAILED, "oops."));
         assertNotNull(instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true)));
         assertNotNull(instanceService.getLastOperation(TestConfig.getLastServiceOperationRequest(ID)));
-        assertEquals(OperationState.FAILED, serviceInstance.getLastOperation().getState());
+        assertEquals(LastOperation.FAILED, serviceInstance.getLastOperation().getState());
         assertFalse(serviceInstance.isDeleted());
 
         //successful delete
-        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.IN_PROGRESS, "deleted."));
-        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(Operation.DELETE, OperationState.SUCCEEDED, "deleted."));
+        when(mockDefaultServiceImpl.deleteInstance(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.IN_PROGRESS, "deleted."));
+        when(mockDefaultServiceImpl.lastOperation(any(ServiceInstance.class))).thenReturn(new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, "deleted."));
         assertNotNull(instanceService.deleteServiceInstance(TestConfig.deleteRequest(ID, true)));
         assertFalse(serviceInstance.isDeleted());
 

@@ -18,7 +18,6 @@
 package io.pivotal.ecosystem.servicebroker;
 
 import io.pivotal.ecosystem.servicebroker.model.LastOperation;
-import io.pivotal.ecosystem.servicebroker.model.Operation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import io.pivotal.ecosystem.servicebroker.service.ServiceBindingRepository;
@@ -62,7 +61,7 @@ class TestConfig {
     @Bean
     public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
         ServiceInstance si = new ServiceInstance(req);
-        si.setLastOperation(new LastOperation(Operation.CREATE, OperationState.SUCCEEDED, "created."));
+        si.setLastOperation(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
         si.addParameter(HelloBroker.USER_NAME_KEY, "world");
         si.addParameter(HelloBroker.PASSWORD_KEY, "guest");
         si.addParameter(HelloBroker.ROLE_KEY, User.Role.User);
