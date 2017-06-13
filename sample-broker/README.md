@@ -10,8 +10,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   ```bash
   cf create-service p-redis shared-vm hello-ds
   ```
-2. The broker makes use of spring-security to protect itself against unauthorized meddling. To set its password edit the [application.properties file](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/src/main/resources/application.properties) (you probably don't want to check this in!)
-1. Edit the [manifest.yml](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/manifest.yml) file as needed for your CF install.
+2. The broker makes use of spring-security to protect itself against unauthorized meddling. To set its username and password edit the [manifest.yml](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/manifest.yml) file as needed for your CF install (you probably don't want to check this in!).
 1. Build the broker:
   
   ```bash
@@ -26,7 +25,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
 8. Register the broker:
   
   ```bash
-  cf create-service-broker your_broker_name user the_password_from_application_properties https://uri.of.your.broker.app
+  cf create-service-broker your_broker_name the_user_from_the_manifest the_password_from_the_manifest https://uri.of.your.broker.app
   ```
 9. See the broker:
   

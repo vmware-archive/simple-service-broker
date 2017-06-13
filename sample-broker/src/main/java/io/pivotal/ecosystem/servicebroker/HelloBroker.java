@@ -1,22 +1,23 @@
-/**
- Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
-
- This program and the accompanying materials are made available under
- the terms of the under the Apache License, Version 2.0 (the "License”);
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+/*
+ * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * <p>
+ * This program and the accompanying materials are made available under
+ * the terms of the under the Apache License, Version 2.0 (the "License”);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.pivotal.ecosystem.servicebroker;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
 import io.pivotal.ecosystem.servicebroker.service.DefaultServiceImpl;
@@ -41,6 +42,10 @@ import java.util.Map;
 @Slf4j
 public class HelloBroker extends DefaultServiceImpl {
 
+    static final String USER_NAME_KEY = "user";
+    static final String PASSWORD_KEY = "password";
+    static final String ROLE_KEY = "role";
+
     public HelloBroker(HelloBrokerRepository helloRepository, Environment env) {
         super();
         this.helloRepository = helloRepository;
@@ -57,21 +62,22 @@ public class HelloBroker extends DefaultServiceImpl {
      *
      * @param instance service instance data passed in by the cloud connector. Clients can pass additional json
      *                 as part of the create-service request, which will show up as key value pairs in instance.parameters.
-     * @throws ServiceBrokerException thrown this for any errors during instance creation.
      */
     @Override
-    public void createInstance(ServiceInstance instance) throws ServiceBrokerException {
-
-        //TODO use admin creds to talk to service
+    public LastOperation createInstance(ServiceInstance instance) {
         log.info("provisioning broker user: " + instance.getId());
 
         try {
-            User user = helloRepository.provisionUser(new User(instance.getId(), User.Role.Broker));
-            instance.addParameter("user", user);
-            log.info("broker user: " + user.getName() + " created.");
+            User user = helloRepository.provisionUser(new User(instance.getId(), null, User.Role.Broker));
+            instance.addParameter(USER_NAME_KEY, user.getName());
+            instance.addParameter(ROLE_KEY, user.getRole().toString());
+            instance.addParameter(PASSWORD_KEY, user.getPassword());
+            String msg = "broker user: " + user.getName() + " created.";
+            log.info(msg);
+            return new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ServiceBrokerException(t);
+            return new LastOperation(LastOperation.CREATE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -80,22 +86,20 @@ public class HelloBroker extends DefaultServiceImpl {
      * on your underlying service, delete user accounts, destroy environments, etc.
      *
      * @param instance service instance data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during instance deletion.
      */
     @Override
-    public void deleteInstance(ServiceInstance instance) throws ServiceBrokerException {
-        //TODO use admin creds to talk to service
+    public LastOperation deleteInstance(ServiceInstance instance) {
         log.info("deprovisioning broker user: " + instance.getId());
 
         try {
-            User user = (User) instance.getParameter("user");
-            helloRepository.deprovisionUser(user.getName());
-            instance.getParameters().remove("user");
-
-            log.info("broker user: " + user.getName() + " deleted.");
+            String name = instance.getParameter(USER_NAME_KEY).toString();
+            helloRepository.deprovisionUser(name);
+            String msg = "broker user: " + name + " deleted.";
+            log.info(msg);
+            return new LastOperation(LastOperation.DELETE, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ServiceBrokerException(t);
+            return new LastOperation(LastOperation.DELETE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -104,23 +108,22 @@ public class HelloBroker extends DefaultServiceImpl {
      * your service instance.
      *
      * @param instance service instance data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during instance deletion. Services that do not support
-     *                                updating can through ServiceInstanceUpdateNotSupportedException here.
      */
     @Override
-    public void updateInstance(ServiceInstance instance) throws ServiceBrokerException {
-        //TODO change user/pw for this instance, use admin creds to talk to service
+    public LastOperation updateInstance(ServiceInstance instance) {
         log.info("updating broker user: " + instance.getId());
 
         try {
-            User user = (User) instance.getParameter("user");
-            user = helloRepository.updateUser(user.getName(), user);
-            instance.getParameters().put("user", user);
-
-            log.info("broker user: " + user.getName() + " updated.");
+            User user = new User();
+            user.setName(instance.getParameter(USER_NAME_KEY).toString());
+            user.setPassword(instance.getParameter(PASSWORD_KEY).toString());
+            user.setRole(User.Role.valueOf(instance.getParameter(ROLE_KEY).toString()));
+            helloRepository.updateUser(user);
+            log.info("broker user updated");
+            return new LastOperation(LastOperation.UPDATE, LastOperation.SUCCEEDED, "updated.");
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ServiceBrokerException(t);
+            return new LastOperation(LastOperation.UPDATE, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -136,21 +139,22 @@ public class HelloBroker extends DefaultServiceImpl {
      *                 as part of the bind-service request, which will show up as key value pairs in binding.parameters. Brokers
      *                 can, as part of this method, store any information needed for credentials and unbinding operations as key/value
      *                 pairs in binding.properties
-     * @throws ServiceBrokerException thrown this for any errors during binding creation.
      */
     @Override
-    public void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-        //TODO use admin creds to talk to service
+    public LastOperation createBinding(ServiceInstance instance, ServiceBinding binding) {
         log.info("provisioning user: " + binding.getId());
 
         try {
-            User user = helloRepository.provisionUser(new User(binding.getId(), User.Role.User));
-            binding.getParameters().put("user", user);
-
-            log.info("user: " + user.getName() + " created.");
+            User user = helloRepository.provisionUser(new User(binding.getId(), null, User.Role.User));
+            binding.getParameters().put(USER_NAME_KEY, user.getName());
+            binding.getParameters().put(ROLE_KEY, user.getRole());
+            binding.getParameters().put(PASSWORD_KEY, user.getPassword());
+            String msg = "user: " + user.getName() + " created.";
+            log.info(msg);
+            return new LastOperation(LastOperation.BIND, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ServiceBrokerException(t);
+            return new LastOperation(LastOperation.BIND, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -159,22 +163,20 @@ public class HelloBroker extends DefaultServiceImpl {
      *
      * @param instance service instance data passed in by the cloud connector.
      * @param binding  binding data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during the unbinding creation.
      */
     @Override
-    public void deleteBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException {
-        //TODO use admin creds to talk to service
+    public LastOperation deleteBinding(ServiceInstance instance, ServiceBinding binding) {
         log.info("deprovisioning user: " + binding.getId());
 
         try {
-            User user = (User) binding.getParameter("user");
-            helloRepository.deprovisionUser(user.getName());
-            binding.getParameters().remove("user");
-
-            log.info("user: " + user.getName() + " deleted.");
+            String name = binding.getParameter(USER_NAME_KEY).toString();
+            helloRepository.deprovisionUser(name);
+            String msg = "user: " + name + " deleted.";
+            log.info(msg);
+            return new LastOperation(LastOperation.UNBIND, LastOperation.SUCCEEDED, msg);
         } catch (Throwable t) {
             log.error(t.getMessage(), t);
-            throw new ServiceBrokerException(t);
+            return new LastOperation(LastOperation.UNBIND, LastOperation.FAILED, t.getMessage());
         }
     }
 
@@ -197,13 +199,11 @@ public class HelloBroker extends DefaultServiceImpl {
         log.info("returning creds.");
 
         try {
-            User user = (User) binding.getParameters().get("user");
-
             Map<String, Object> m = new HashMap<>();
             m.put("hostname", env.getProperty("HELLO_HOST"));
             m.put("port", env.getProperty("HELLO_PORT"));
-            m.put("username", user.getName());
-            m.put("password", user.getPassword());
+            m.put("username", binding.getParameter(USER_NAME_KEY));
+            m.put("password", binding.getParameter(PASSWORD_KEY));
 
             String uri = "hello://" + m.get("username") + ":" + m.get("password") + "@" + m.get("hostname") + ":" + m.get("port");
             m.put("uri", uri);
@@ -217,7 +217,6 @@ public class HelloBroker extends DefaultServiceImpl {
 
     @Override
     public boolean isAsync() {
-        //TODO deal with async
         return false;
     }
 }

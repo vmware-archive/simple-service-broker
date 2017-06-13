@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-package io.pivotal.ecosystem.servicebroker.service;
+package io.pivotal.ecosystem.servicebroker;
 
+import io.pivotal.ecosystem.servicebroker.service.CatalogService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

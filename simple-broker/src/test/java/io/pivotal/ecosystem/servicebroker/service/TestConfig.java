@@ -15,32 +15,43 @@
  * limitations under the License.
  */
 
-package io.pivotal.ecosystem.servicebroker;
+package io.pivotal.ecosystem.servicebroker.service;
 
-import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
-import io.pivotal.ecosystem.servicebroker.service.ServiceBindingRepository;
-import io.pivotal.ecosystem.servicebroker.service.ServiceInstanceRepository;
+import org.mockito.InjectMocks;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.servicebroker.model.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-class TestConfig {
-
-    private static final String SI_ID = "siId";
-    private static final String SB_ID = "sbId";
+@EnableRedisRepositories
+public class TestConfig {
 
     static final String SD_ID = "aUniqueId";
     static final String PLAN_ID = "anotherUniqueId";
     private static final String APP_GUID = "anAppGuid";
     private static final String ORG_GUID = "anOrgGuid";
     private static final String SPACE_GUID = "aSpaceGuid";
+
+    @Bean
+    public CatalogService catalogService() {
+        return new CatalogService();
+    }
+
+    @Autowired
+    @InjectMocks
+    private BindingService bindingService;
+
+    @Autowired
+    @InjectMocks
+    private InstanceService instanceService;
 
     @MockBean
     private ServiceBindingRepository serviceBindingRepository;
@@ -49,63 +60,39 @@ class TestConfig {
     private ServiceInstanceRepository serviceInstanceRepository;
 
     @MockBean
-    HelloBrokerRepository helloBrokerRepository;
+    private DefaultServiceImpl mockDefaultServiceImpl;
 
-    @Bean
-    public CreateServiceInstanceRequest createServiceInstanceRequest() {
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(SD_ID, PLAN_ID, ORG_GUID, SPACE_GUID, getParameters());
-        req.withServiceInstanceId(SI_ID);
-        return req;
-    }
-
-    @Bean
-    public ServiceInstance serviceInstance(CreateServiceInstanceRequest req) {
-        ServiceInstance si = new ServiceInstance(req);
-        si.setLastOperation(new LastOperation(LastOperation.CREATE, LastOperation.SUCCEEDED, "created."));
-        si.addParameter(HelloBroker.USER_NAME_KEY, "world");
-        si.addParameter(HelloBroker.PASSWORD_KEY, "guest");
-        si.addParameter(HelloBroker.ROLE_KEY, User.Role.User);
-        return si;
-    }
-
-    private Map<String, Object> getBindResources() {
+    private static Map<String, Object> getBindResources() {
         Map<String, Object> m = new HashMap<>();
         m.put("app_guid", APP_GUID);
         return m;
     }
 
-    private Map<String, Object> getParameters() {
+    static Map<String, Object> getParameters() {
         Map<String, Object> m = new HashMap<>();
         m.put("foo", "bar");
         m.put("bizz", "bazz");
         return m;
     }
 
-    @Bean
-    public CreateServiceInstanceBindingRequest createBindingRequest() {
-        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID,
-                getBindResources(), getParameters());
-        req.withBindingId(SB_ID);
-        req.withServiceInstanceId(SI_ID);
+    static CreateServiceInstanceBindingRequest createBindingRequest(String serviceInstanceId, String serviceBindingId) {
+        CreateServiceInstanceBindingRequest req = new CreateServiceInstanceBindingRequest(SD_ID, PLAN_ID, APP_GUID, getBindResources(), getParameters());
+        req.withBindingId(serviceBindingId);
+        req.withServiceInstanceId(serviceInstanceId);
         return req;
     }
 
-    @Bean
-    public ServiceBinding serviceBinding(CreateServiceInstanceBindingRequest req) {
-        return new ServiceBinding(req);
+    static DeleteServiceInstanceBindingRequest deleteBindingRequest(String serviceInstanceId, String serviceBindingId) {
+        return new DeleteServiceInstanceBindingRequest(serviceInstanceId, serviceBindingId, SD_ID, PLAN_ID, null);
     }
 
     static CreateServiceInstanceRequest createRequest(String id, boolean async) {
-        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, new HashMap<>());
+        CreateServiceInstanceRequest req = new CreateServiceInstanceRequest(TestConfig.SD_ID, TestConfig.PLAN_ID, TestConfig.ORG_GUID, TestConfig.SPACE_GUID, TestConfig.getParameters());
         if (async) {
             req.withAsyncAccepted(true);
         }
         req.withServiceInstanceId(id);
         return req;
-    }
-
-    static GetLastServiceOperationRequest lastOperationRequest(String id) {
-        return new GetLastServiceOperationRequest(id);
     }
 
     static UpdateServiceInstanceRequest updateRequest(String id, boolean async) {
@@ -119,5 +106,21 @@ class TestConfig {
 
     static DeleteServiceInstanceRequest deleteRequest(String id, boolean async) {
         return new DeleteServiceInstanceRequest(id, TestConfig.SD_ID, TestConfig.PLAN_ID, null, async);
+    }
+
+    static GetLastServiceOperationRequest lastOperationRequest(String id) {
+        return new GetLastServiceOperationRequest(id);
+    }
+
+    static GetLastServiceOperationRequest getLastServiceOperationRequest(String id) {
+        return new GetLastServiceOperationRequest(id);
+    }
+
+    static ServiceInstance getServiceInstance(String id, boolean async) {
+        return new ServiceInstance(createRequest(id, async));
+    }
+
+    static ServiceBinding getServiceBinding(String id) {
+        return new ServiceBinding(createBindingRequest(id, id));
     }
 }

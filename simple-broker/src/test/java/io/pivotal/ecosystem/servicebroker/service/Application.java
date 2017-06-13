@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.pivotal.ecosystem.servicebroker;
+package io.pivotal.ecosystem.servicebroker.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

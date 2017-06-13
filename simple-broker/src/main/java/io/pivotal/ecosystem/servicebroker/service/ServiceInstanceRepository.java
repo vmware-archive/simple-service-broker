@@ -15,16 +15,12 @@
  * limitations under the License.
  */
 
-package io.pivotal.ecosystem.servicebroker;
+package io.pivotal.ecosystem.servicebroker.service;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-@SpringBootApplication
-public class Application {
-
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-
+@Repository
+public interface ServiceInstanceRepository extends CrudRepository<ServiceInstance, String> {
 }

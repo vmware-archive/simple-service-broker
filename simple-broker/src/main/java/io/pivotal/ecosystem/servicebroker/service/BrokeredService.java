@@ -1,25 +1,25 @@
-/**
- Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
-
- This program and the accompanying materials are made available under
- the terms of the under the Apache License, Version 2.0 (the "License”);
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+/*
+ * Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
+ * <p>
+ * This program and the accompanying materials are made available under
+ * the terms of the under the Apache License, Version 2.0 (the "License”);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import io.pivotal.ecosystem.servicebroker.model.LastOperation;
 import io.pivotal.ecosystem.servicebroker.model.ServiceBinding;
 import io.pivotal.ecosystem.servicebroker.model.ServiceInstance;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
 
 import java.util.Map;
 
@@ -35,28 +35,24 @@ public interface BrokeredService {
      *
      * @param instance service instance data passed in by the cloud connector. Clients can pass additional json
      *                 as part of the create-service request, which will show up as key value pairs in instance.parameters.
-     * @throws ServiceBrokerException thrown this for any errors during instance creation.
      */
-    void createInstance(ServiceInstance instance) throws ServiceBrokerException;
+    LastOperation createInstance(ServiceInstance instance);
 
     /**
      * Code here will be called during the delete-service instance process. You can use this to de-allocate resources
      * on your underlying service, delete user accounts, destroy environments, etc.
      *
      * @param instance service instance data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during instance deletion.
      */
-    void deleteInstance(ServiceInstance instance) throws ServiceBrokerException;
+    LastOperation deleteInstance(ServiceInstance instance);
 
     /**
      * Code here will be called during the update-service process. You can use this to modify
      * your service instance.
      *
      * @param instance service instance data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during instance deletion. Services that do not support
-     *                                updating can through ServiceInstanceUpdateNotSupportedException here.
      */
-    void updateInstance(ServiceInstance instance) throws ServiceBrokerException;
+    LastOperation updateInstance(ServiceInstance instance);
 
     /**
      * Called during the bind-service process. This is a good time to set up anything on your underlying service specifically
@@ -70,18 +66,16 @@ public interface BrokeredService {
      *                 as part of the bind-service request, which will show up as key value pairs in binding.parameters. Brokers
      *                 can, as part of this method, store any information needed for credentials and unbinding operations as key/value
      *                 pairs in binding.properties
-     * @throws ServiceBrokerException thrown this for any errors during binding creation.
      */
-    void createBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException;
+    LastOperation createBinding(ServiceInstance instance, ServiceBinding binding);
 
     /**
      * Called during the unbind-service process. This is a good time to destroy any resources, users, connections set up during the bind process.
      *
      * @param instance service instance data passed in by the cloud connector.
      * @param binding  binding data passed in by the cloud connector.
-     * @throws ServiceBrokerException thrown this for any errors during the unbinding creation.
      */
-    void deleteBinding(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException;
+    LastOperation deleteBinding(ServiceInstance instance, ServiceBinding binding);
 
     /**
      * Bind credentials that will be returned as the result of a create-binding process. The format and values of these credentials will
@@ -94,12 +88,17 @@ public interface BrokeredService {
      * @param instance service instance data passed in by the cloud connector.
      * @param binding  binding data passed in by the cloud connector.
      * @return credentials, as a series of key/value pairs
-     * @throws ServiceBrokerException thrown this for any errors during credential creation.
      */
-    Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding) throws ServiceBrokerException;
+    Map<String, Object> getCredentials(ServiceInstance instance, ServiceBinding binding);
 
     /**
      * @return true if this broker supports asynchronous operations
      */
     boolean isAsync();
+
+    /**
+     * @param instance service instance of interest
+     * @return the last operational state of the specified instance
+     */
+    LastOperation lastOperation(ServiceInstance instance);
 }

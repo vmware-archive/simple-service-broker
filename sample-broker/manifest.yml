@@ -4,10 +4,11 @@ applications:
   memory: 512M
   instances: 1
   buildpack: java_buildpack_offline
-  path: target/sample-broker-1.0.0.jar
+  path: target/hello-broker.jar
   services: [ hello-ds ]
   env:
     SPRING_PROFILES_ACTIVE: cloud
-    API_VERSION: 2.9
-    HELLO_HOST: sample.broker.domain
+    HELLO_HOST: hello-service.cfapps.pie-jm.cfplatformeng.com
     HELLO_PORT: 80
+    SECURITY_USER_NAME: helloUser
+    SECURITY_USER_PASSWORD: helloPassword

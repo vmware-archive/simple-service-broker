@@ -1,4 +1,4 @@
-/**
+/*
  Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
 
  This program and the accompanying materials are made available under
@@ -23,10 +23,6 @@ import feign.RequestLine;
 import org.springframework.web.bind.annotation.RequestBody;
 
 interface HelloBrokerRepository {
-
-    //TODO how to test this with mocks?
-
-    //TODO create types of users: admin for CI and user for BI, plus fix these!
     @Headers("Content-Type: application/json")
     @RequestLine("POST /users")
     User provisionUser(@RequestBody User user);
@@ -36,6 +32,6 @@ interface HelloBrokerRepository {
     void deprovisionUser(@Param(value = "username") String username);
 
     @Headers("Content-Type: application/json")
-    @RequestLine("PUT /users/{username}")
-    User updateUser(@Param(value = "username") String username, @RequestBody User user);
+    @RequestLine("PUT /users")
+    User updateUser(@RequestBody User user);
 }

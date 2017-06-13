@@ -17,34 +17,41 @@
 
 package io.pivotal.ecosystem.servicebroker.service;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.servicebroker.exception.ServiceBrokerException;
-import org.springframework.cloud.servicebroker.model.Catalog;
+import org.springframework.cloud.servicebroker.controller.CatalogController;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class CatalogServiceTest {
+public class CatalogMVCTest {
+
+    private MockMvc mockMvc;
 
     @Autowired
     private CatalogService catalogService;
 
-    @Test
-    public void testGetEntitledCatalog() throws ServiceBrokerException {
-        Catalog catalog = catalogService.getCatalog();
-        assertNotNull(catalog);
-        assertTrue(catalog.getServiceDefinitions().size() > 0);
+    @Before
+    public void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(new CatalogController(catalogService)).build();
     }
 
     @Test
-    public void testGetEntitledCatalogItem() throws ServiceBrokerException {
-        assertNull(catalogService.getServiceDefinition(null));
-        assertNull(catalogService.getServiceDefinition(""));
-        assertNotNull(catalogService.getServiceDefinition(TestConfig.SD_ID));
+    public void testCatalog() throws Exception {
+        this.mockMvc.perform(get("/v2/catalog"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.services", hasSize(1)))
+                .andDo(print());
     }
 }

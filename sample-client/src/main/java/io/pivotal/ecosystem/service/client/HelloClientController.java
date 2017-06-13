@@ -1,4 +1,4 @@
-/**
+/*
  Copyright (C) 2016-Present Pivotal Software, Inc. All rights reserved.
 
  This program and the accompanying materials are made available under
@@ -17,7 +17,6 @@
 
 package io.pivotal.ecosystem.service.client;
 
-import io.pivotal.ecosystem.service.connector.HelloException;
 import io.pivotal.ecosystem.service.connector.HelloRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,8 +38,8 @@ class HelloClientController {
     ResponseEntity<String> greeting(@RequestParam(value = "username") String username) {
         try {
             return new ResponseEntity<>(helloRepository.greeting(username), HttpStatus.OK);
-        } catch (HelloException e) {
-            return new ResponseEntity<>(e.getMessage(), e.getStatus());
+        } catch (Throwable t) {
+            return new ResponseEntity<>(t.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
