@@ -1,4 +1,4 @@
-#sample-service
+# sample-service
 This is a sample back-end service that acts as "the thing we are creating a broker for." Since the focus here is on building a broker (and not the complexity of the underlying service) this example is purposefully simplistic.
 
 At a high level, the service allows for provisioning of user accounts:
@@ -7,7 +7,7 @@ At a high level, the service allows for provisioning of user accounts:
  
 Once these accounts are provisioned, "broker" users can create, update and delete service instances, and "user" users can get a nice greeting from the backend service.
 
-##Using sample-service
+## Using sample-service
 1. Git checkout (if you have not already checked out the parent project):
   
   ```bash
