@@ -96,7 +96,7 @@
 
     <profiles>
         <profile>
-            <id>release-build</id>
+            <id>release</id>
             <build>
                 <plugins>
 

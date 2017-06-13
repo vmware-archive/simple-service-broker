@@ -12,3 +12,4 @@ tile-generator
 sample-broker/product
 sample-broker/release
 *.versionsBackup
+.DS_Store
