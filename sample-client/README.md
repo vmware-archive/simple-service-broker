@@ -1,7 +1,7 @@
-#sample-client
+# sample-client
 This is an example spring boot sample application that makes use of the sample-connector to connect to the sample-service via the sample-broker, amply. 
 
-##Using sample-client
+## Using sample-client
 1. Git checkout and build the modules (if you have not already done so):
 
   ```bash
@@ -78,14 +78,14 @@ This is an example spring boot sample application that makes use of the sample-c
     http://hello-client.your.domain.io/greeting?username=83c52f6c-16a3-4e67-b19f-f6f4e6e82c08
     ```
   
-##What Just Happened?
+## What Just Happened?
 Looking at the project [source directory](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-client/src/main/java/io/pivotal/cf/service/client), there is no obvious configuration in sample-client. Because it uses [sample-connector](https://github.com/cf-platform-eng/simple-service-broker/tree/master/sample-connector), all we needed to do to get it to connect to sample-service is:
 
 1. Add hello-service to the [manifest](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/manifest.yml#L8) file.
 1. Add the @ServiceScan annotation to the [Application](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/Application.java#L8) class.
 1. Add the [@RestController](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java#L12) annotation to HelloClientController and include [HelloRepository](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-connector/src/main/java/io/pivotal/cf/service/connector/HelloRepository.java) as a [constructor param.](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-client/src/main/java/io/pivotal/cf/service/client/HelloClientController.java#L15)
   
-##What we did *not* need to do:
+## What we did *not* need to do:
 We did not need to:
   * tell sample-client what the hello-service was
   * or where to find it
