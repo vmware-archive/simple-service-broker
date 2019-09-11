@@ -11,23 +11,26 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   cf create-service p-redis shared-vm hello-ds
   ```
 2. The broker makes use of spring-security to protect itself against unauthorized meddling. To set its username and password edit the [manifest.yml](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/manifest.yml) file as needed for your CF install (you probably don't want to check this in!).
-3. Build the broker:
+
+3. The broker has a preset host address for `hello-service`. Edit the [manifest.yml](https://github.com/cf-platform-eng/simple-service-broker/blob/master/sample-broker/manifest.yml) as needed for your CF install.
+
+4. Build the broker:
   
   ```bash
   cd sample-broker
   mvn clean install
   ```
-4. Push the broker to cf:
+5. Push the broker to cf:
   
   ```bash
   cf push
   ```
-5. Register the broker:
+6. Register the broker:
   
   ```bash
   cf create-service-broker your_broker_name the_user_from_the_manifest the_password_from_the_manifest https://uri.of.your.broker.app
   ```
-6. See the broker:
+7. See the broker:
   
   ```bash
   cf service-brokers
@@ -57,12 +60,12 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   hello            hi                                    Friendly service that greets you
   ...
   ```
-7. Create an instance:
+8. Create an instance:
   
   ```bash
   cf create-service hello hi hello-service
   ```
-8. Look at the broker logs:
+9. Look at the broker logs:
   
   ```bash
   cf logs hello-broker --recent
@@ -70,7 +73,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   2016-10-07T10:30:27.16-0400 [APP/0]      OUT 2016-10-07 14:30:27 [http-nio-8080-exec-7] INFO  i.p.c.s.service.InstanceService - creating service instance: 727b9a....
   ...
   ```
-9. Bind an app to the service and check the logs again:
+10. Bind an app to the service and check the logs again:
   
   ```bash
   cf bind-service someOtherApp hello-service
@@ -78,7 +81,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   2016-10-07T10:30:42.61-0400 [APP/0]      OUT 2016-10-07 14:30:42 [http-nio-8080-exec-8] INFO  i.p.c.s.service.BindingService - creating binding for service instance: 727b9a....
   ...
   ```
-10. Restage the service you bound to and look at its env: you should see some hello credentials in there:
+11. Restage the service you bound to and look at its env: you should see some hello credentials in there:
   
   ```bash
   cf restage someOtherApp
@@ -111,7 +114,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
     }
    }
   ```
-11. Unbind your app from the service and look at the logs:
+12. Unbind your app from the service and look at the logs:
   
   ```bash
   cf unbind-service someOtherApp hello-service
@@ -119,7 +122,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   2016-10-07T10:38:23.23-0400 [APP/0]      OUT 2016-10-07 14:38:23 [http-nio-8080-exec-5] INFO  i.p.cf.servicebroker.HelloBroker - deprovisioning user: 63810f0...
   ...
   ```
-12. Delete the service and look at the logs:
+13. Delete the service and look at the logs:
   
   ```bash
   cf delete-service hello-service
@@ -127,7 +130,7 @@ The [sample-service](https://github.com/cf-platform-eng/simple-service-broker/tr
   2016-10-07T10:39:22.43-0400 [APP/0]      OUT 2016-10-07 14:39:22 [http-nio-8080-exec-7] INFO  i.p.c.s.service.InstanceService - starting service instance delete: 727b9a...
   ...
   ```
-13. Unregister and delete the broker:
+14. Unregister and delete the broker:
   
   ```bash
   cf delete-service-broker hello-broker
