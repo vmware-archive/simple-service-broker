@@ -1,7 +1,7 @@
 ---
 applications:
 - name: hello-service
-  memory: 256M
+  memory: 768M
   instances: 1
   buildpack: java_buildpack_offline
   path: target/sample-service-1.1.0.jar
