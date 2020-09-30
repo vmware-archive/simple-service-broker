@@ -3,9 +3,10 @@
 ------------------------------------------------------------------------
 **NOTE**
 
-This has been largely superceeded by newer tooling such as [Spring App Broker](https://spring.io/projects/spring-cloud-app-broker) which provides a framework for building service brokers by using the [Spring Cloud Open Service Broker API](https://spring.io/projects/spring-cloud-open-service-broker). 
+Outdated superceeded by newer tooling such as [Spring App Broker](https://spring.io/projects/spring-cloud-app-broker) which provides a framework for building service brokers by using the [Spring Cloud Open Service Broker API](https://spring.io/projects/spring-cloud-open-service-broker). 
 
 Some other Java based examples are:
+* [Java Servie Broker](https://github.com/cf-platform-eng/pcf-examples/tree/master/java-service-broker)
 * [Bookstore Service Broker](https://github.com/spring-cloud-samples/bookstore-service-broker)
 * [Minimal Java Service Broker](https://github.com/cf-platform-eng/pcf-examples/tree/master/java-service-broker)
 ------------------------------------------------------------------------
