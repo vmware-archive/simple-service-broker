@@ -1,3 +1,5 @@
+# simple-service-broker is no longer actively maintained by VMware.
+
 # simple-service-broker
 
 ------------------------------------------------------------------------
